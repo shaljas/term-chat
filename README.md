@@ -25,5 +25,11 @@ Expandability
 - code files have to be smoothly readable from top to bottom
 - avoid comments unless absolutely necessary
 
+## Deadlines
+- I. stage: 2026-04-05
+- II. stage: 2026-04-26 
+- III. stage: 2026-05-17
+- Project demo: 2026-05-21
+
 ## Academic project
 This project is being developed as part of an university course assignment.
