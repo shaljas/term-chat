@@ -16,6 +16,9 @@ Expandability
 - support for encypted messaging
 - desktop notifications
 
+## Class diagram
+
+![Picture of class diagram](/Attachments/ClassDiagram.png)
 
 ## Group agreements
 - "main" branch is only for clean and ready code, otherwise use "dev" branch
@@ -26,10 +29,10 @@ Expandability
 - avoid comments unless absolutely necessary
 
 ## Deadlines
-- I. stage: 2026-04-05
-- II. stage: 2026-04-26 
-- III. stage: 2026-05-17
-- Project demo: 2026-05-21
+- I stage: 4. April 2026
+- II stage: 26. Aprill
+- III stage: 17. May 2026
+- Project demo: 21 May 2026
 
 ## Academic project
 This project is being developed as part of an university course assignment.
