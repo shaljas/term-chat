@@ -29,10 +29,31 @@ Expandability
 - avoid comments unless absolutely necessary
 
 ## Deadlines
-- I stage: 4. April 2026
-- II stage: 26. Aprill
-- III stage: 17. May 2026
-- Project demo: 21 May 2026
+I stage: 4. April 2026
+- Github repository and clone to IDE (everyone)
+- host-server to client session
+- Classes
+    - User (rbr4t)
+    - Message (hugoSaks)
+    - ChatRoom (shuffonix)
+    - Server (everyone)
+    - Session (shaljas)
+
+II stage: 26. Aprill
+- user login/logout
+- messaging
+- chat room creation and usage
+- central-server
+
+III stage: 17. May 2026
+- chat history
+- send files*
+- search by content and date
+- email notification to offline users
+- clean and refactored code
+- updated diagram and ReadME
+
+Project demo: 21 May 2026
 
 ## Academic project
 This project is being developed as part of an university course assignment.
