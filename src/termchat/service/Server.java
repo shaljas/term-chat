@@ -6,45 +6,53 @@ import java.io.IOException;
 import java.net.Socket;
 import java.net.ServerSocket;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class Server {
-    private List<User> users;
-    private List<ChatRoom> chatRooms;
-    private List<Session> activeSessions;
+    private final List<User> users;
+    private final List<ChatRoom> chatRooms;
+    private final Map<String, Session> activeSessions;
 
     public Server() {
-//        this.users = users;
-//        this.chatRooms = chatRooms;
-//        this.activeSessions = activeSessions;
+        this.users = null;
+        this.chatRooms = null;
+        this.activeSessions = new ConcurrentHashMap<>();
     }
 
     protected void start() throws IOException {
         ExecutorService pool = Executors.newFixedThreadPool(6);
 
         try (ServerSocket serverSocket = new ServerSocket(3000)){
+            System.out.println("Server is now listening.");
             while (true) {
                 Socket clientSocket = serverSocket.accept();
-                pool.execute(() -> handleClient(clientSocket));
+                pool.execute(new ClientHandler(clientSocket, this));
             }
         } finally {
             pool.shutdown();
-            activeSessions.forEach(Session::endSession);
+            activeSessions.forEach((k,v) -> v.endSession());
         }
-    };
+    }
 
-    protected void createRoom(){};
+    protected void addSession(Session session) {
+        activeSessions.put(session.getSessionId(), session);
+    }
 
-    protected void registerUser(){};
+    protected void removeSession(Session session) {
+        activeSessions.remove(session.getSessionId());
+    }
 
-    private void handleClient(Socket clientSocket){
 
-    };
+    protected void createRoom(){}
 
-    private void authenticateUser(){};
+    protected void registerUser(){}
 
-    private void routeMessage(){};
+    private void authenticateUser(){}
 
-    private void notifyOfflineUser(){};
+    private void routeMessage(){}
+
+    private void notifyOfflineUser(){}
 }
