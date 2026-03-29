@@ -13,6 +13,10 @@ public class User {
         this.isOnline = false;
     }
 
+    public String getUsername() {
+        return username;
+    }
+
     void login() {
         this.isOnline = true;
         // TODO: implementeerida login loogika, nt kontrollida parooli ja uuendada kasutaja olekut
