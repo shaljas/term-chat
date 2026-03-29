@@ -1,5 +1,7 @@
 package termchat.model;
 
+import java.util.List;
+
 public class User {
     private String userId;
     private String username;

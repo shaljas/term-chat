@@ -5,8 +5,8 @@ import java.time.LocalDateTime;
 public class Message {
 
     private final int messageId;
-    private String content;
-    private User sender;
+    private final String content;
+    private final User sender;
     private final LocalDateTime timestamp;
     private boolean delivered;
 
