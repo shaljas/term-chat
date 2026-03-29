@@ -23,8 +23,7 @@ public class Message {
 
     public String format() {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
-        // return timestamp.format(formatter) + sender.getUsername() + ": " + content;
-        return null;
+        return timestamp.format(formatter) + sender.getUsername() + ": " + content;
     }
 
     public int getMessageId() {
