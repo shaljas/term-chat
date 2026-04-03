@@ -46,6 +46,7 @@ public class ClientHandler implements Runnable {
 
     private void handleMessage(String message) {
         if (message.equalsIgnoreCase("quit")) {
+            out.print("quit");
             running = false;
         } else {
             out.println("Message: '" + message + "'.");
@@ -70,7 +71,6 @@ public class ClientHandler implements Runnable {
             if (socket != null) {
                 socket.close();
             }
-
         } catch (IOException e) {
             System.out.println("ClientHandler cleanup error: " + e.getMessage());
         }
@@ -85,6 +85,7 @@ public class ClientHandler implements Runnable {
             listenLoop();
         } finally {
             cleanup();
+            System.out.println(Thread.currentThread().getName() + " finished.");
         }
     }
 }
