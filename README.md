@@ -40,10 +40,10 @@ I stage: 4. April 2026
     - Session (shaljas)
 
 II stage: 26. Aprill
-- user login/logout
-- messaging
-- chat room creation and usage
-- central-server
+- user login/logout (rbr4t)
+- messaging (hugoSaks + shaljas)
+- central-server (shaljas + hugoSaks)
+- chat room creation and usage (shuffonix)
 
 III stage: 17. May 2026
 - chat history
