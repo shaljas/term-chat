@@ -18,7 +18,7 @@ Expandability
 
 ## Class diagram
 
-![Picture of class diagram](/Attachments/ClassDiagram.png)
+![Picture of class diagram](/Attachments/diagram2.drawio.png)
 
 ## Group agreements
 - "main" branch is only for clean and ready code, otherwise use "dev" branch
