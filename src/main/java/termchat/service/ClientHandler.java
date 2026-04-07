@@ -1,5 +1,7 @@
 package termchat.service;
 
+import termchat.model.User;
+
 import java.io.*;
 import java.net.Socket;
 
@@ -7,6 +9,7 @@ public class ClientHandler implements Runnable {
     private final Server server;
     private final Socket socket;
     private Session session;
+    private User user;
 
     private BufferedReader in;
     private PrintWriter out;
@@ -18,6 +21,14 @@ public class ClientHandler implements Runnable {
         this.server = server;
     }
 
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
+
     private void setupStreams() {
         try {
             in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
@@ -27,10 +38,17 @@ public class ClientHandler implements Runnable {
         }
     }
 
+    public void sendToClient(String message) {
+        if (out != null) out.println(message);
+    }
+
     private void startSession() {
         session = new Session();
         session.startSession();
         server.addSession(session);
+
+        String testUsername = "user" + session.getSessionId().substring(0,5);
+        this.user = new User(session.getSessionId(), testUsername, "");
     }
 
     private void listenLoop() {
@@ -46,7 +64,6 @@ public class ClientHandler implements Runnable {
 
     private void handleMessage(String message) {
         if (message.equalsIgnoreCase("quit")) {
-            out.print("quit");
             running = false;
         } else {
             out.println("Message: '" + message + "'.");
@@ -82,8 +99,10 @@ public class ClientHandler implements Runnable {
         try {
             setupStreams();
             startSession();
+            server.addClientHandler(this);
             listenLoop();
         } finally {
+            server.removeClientHandler(this);
             cleanup();
             System.out.println(Thread.currentThread().getName() + " finished.");
         }
