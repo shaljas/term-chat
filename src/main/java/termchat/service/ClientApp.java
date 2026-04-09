@@ -9,10 +9,6 @@ import java.util.Scanner;
 
 public class ClientApp {
 
-    private void updateThread() {
-
-    }
-
     public static void main(String[] args) throws IOException {
         try (   Socket socket = new Socket("localhost",3000);
                 PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
@@ -21,28 +17,19 @@ public class ClientApp {
         ){
             System.out.println("Client app started");
 
-            Thread updateThread = new Thread(() -> {
-                try {
-                    String incoming;
-                    while((incoming = in.readLine()) != null) {
-                        System.out.println(incoming);
-                    }
-                } catch (IOException e) {
-                    System.out.println("Disconnected");
-                }
-            });
+            InputListenerService listener = new InputListenerService(in);
 
-            updateThread.start();
+            listener.start();
 
             while (userInput.hasNextLine()) {
                 String input = userInput.nextLine();
                 out.println(input);
 
-                // TODO: ideaalis võiks olla ka kliendil teada commandid. praegu /quit sulgeb serveri pool ühenduse, aga thread jääb ikka ootama serveri outputi
+                // TODO: ideaalis võiks olla ka kliendil teada commandid. praegu /quit sulgeb serveri pool ühenduse, aga loop jääb ikka ootama serveri outputi
                 if (input.equalsIgnoreCase("/quit")) break;
             }
 
-            updateThread.join();
+            listener.waitForCompleation();
 
 
         } catch (InterruptedException e) {

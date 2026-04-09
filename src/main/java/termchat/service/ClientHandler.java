@@ -51,6 +51,7 @@ public class ClientHandler implements Runnable {
 
             if (found != null) {
                 this.user = found;
+                user.setOnline(true);
                 sendToClient("Welcome " + this.user.getUsername());
             } else {
                 sendToClient("Error: invalid username or password");
@@ -63,7 +64,9 @@ public class ClientHandler implements Runnable {
                 return;
             }
             sendToClient("Logging out, " + this.user.getUsername());
+            user.setOnline(false);
             this.user = null;
+
         });
 
         commands.put("/help", args -> {
@@ -138,8 +141,6 @@ public class ClientHandler implements Runnable {
                 server.routeMessage(message, this);
             }
         }).handle(args);
-
-
 
     }
 
