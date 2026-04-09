@@ -66,12 +66,11 @@ public class ClientHandler implements Runnable {
             this.user = null;
         });
 
-        // TODO: praegu ei tööta korrektselt mitme sõnumi saatmine serverilt kasutajale
         commands.put("/help", args -> {
             sendToClient("/register <username> <password> - Creates a new account");
-            // sendToClient("/login <username> <password> - Log in to an account");
-            // sendToClient("/logout - logs the user out");
-            // sendToClient("/quit - stops the application");
+            sendToClient("/login <username> <password> - Log in to an account");
+            sendToClient("/logout - logs the user out");
+            sendToClient("/quit - stops the application");
 
         });
 
