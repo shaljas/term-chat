@@ -4,8 +4,8 @@ import termchat.model.User;
 
 import java.io.*;
 import java.net.Socket;
-
-import static termchat.service.EncryptionService.encryptPassword;
+import java.util.HashMap;
+import java.util.Map;
 
 public class ClientHandler implements Runnable {
     private final Server server;
@@ -17,8 +17,66 @@ public class ClientHandler implements Runnable {
     private PrintWriter out;
 
     private boolean running = true;
-    private boolean authenticated = false;
+    private final Map<String, CommandHandler> commands = new HashMap<>();
 
+    private void registerCommands() {
+        commands.put("/register", args -> {
+            if (user != null ) {
+                sendToClient("Error: log out first");
+                return;
+            }
+            if (args.length != 3) {
+                sendToClient("Usage: register <username> <password>");
+                return;
+            };
+            String error = server.registerUser(args[1], args[2]);
+
+            if (error==null) {
+                sendToClient("Account registered");
+            } else {
+                sendToClient("Error: " + error);
+            }
+        });
+
+        commands.put("/login", args -> {
+            if (user != null ) {
+                sendToClient("Error: log out first");
+                return;
+            }
+            if (args.length != 3) {
+                sendToClient("Usage: login <username> <password>");
+                return;
+            };
+            User found = server.loginUser(args[1], args[2]);
+
+            if (found != null) {
+                this.user = found;
+                sendToClient("Welcome " + this.user.getUsername());
+            } else {
+                sendToClient("Error: invalid username or password");
+            }
+        });
+
+        commands.put("/logout", args -> {
+            if (this.user == null) {
+                sendToClient("You are not logged in");
+                return;
+            }
+            sendToClient("Logging out, " + this.user.getUsername());
+            this.user = null;
+        });
+
+        // TODO: praegu ei tööta korrektselt mitme sõnumi saatmine serverilt kasutajale
+        commands.put("/help", args -> {
+            sendToClient("/register <username> <password> - Creates a new account");
+            // sendToClient("/login <username> <password> - Log in to an account");
+            // sendToClient("/logout - logs the user out");
+            // sendToClient("/quit - stops the application");
+
+        });
+
+        commands.put("/quit", args -> running = false);
+    }
 
     public ClientHandler(Socket socket, Server server) {
         this.socket = socket;
@@ -50,9 +108,11 @@ public class ClientHandler implements Runnable {
         session = new Session();
         session.startSession();
         server.addSession(session);
-
+        registerCommands();
+        /*
         String testUsername = "user" + session.getSessionId().substring(0,5);
         this.user = new User(session.getSessionId(), testUsername, "");
+        */
     }
 
     private void listenLoop() {
@@ -69,36 +129,16 @@ public class ClientHandler implements Runnable {
 
 
     private void handleMessage(String message) {
-        if (message.equalsIgnoreCase("quit")) {
-            running = false;
-        }
+        String[] args = message.split(" ");
+        String command = args[0].toLowerCase();
 
-        String[] parts = message.split(" ");
-        String command = parts[0].toLowerCase();
-
-        // mdea kuidas paremini teha neid commande praegu
-        if (command.equals("register") && parts.length == 3) {
-            String error = server.registerUser(parts[1], parts[2]);
-            if (error==null) {
-                sendToClient("Account registered");
+        commands.getOrDefault(command, a -> {
+            if (this.user == null) {
+                sendToClient("Unknown command. Type /help ");
             } else {
-                sendToClient("Error: " + error);
+                server.routeMessage(message, this);
             }
-        } else if (command.equals("login") && parts.length == 3) {
-            User found = server.loginUser(parts[1], parts[2]);
-            if (found != null) {
-                this.user = found;
-                this.authenticated = true;
-                sendToClient("Logging successful, " + user.getUsername());
-            } else {
-                sendToClient("ERROR Invalid username or password");
-            }
-
-        } else {
-            // if authenticated then you reach this
-            server.routeMessage(message, this);
-            // out.println("Message: '" + message + "'.");
-        }
+        }).handle(args);
 
 
 
