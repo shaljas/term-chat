@@ -5,6 +5,8 @@ import termchat.model.User;
 import java.io.*;
 import java.net.Socket;
 
+import static termchat.service.EncryptionService.encryptPassword;
+
 public class ClientHandler implements Runnable {
     private final Server server;
     private final Socket socket;
@@ -15,6 +17,8 @@ public class ClientHandler implements Runnable {
     private PrintWriter out;
 
     private boolean running = true;
+    private boolean authenticated = false;
+
 
     public ClientHandler(Socket socket, Server server) {
         this.socket = socket;
@@ -62,12 +66,42 @@ public class ClientHandler implements Runnable {
         }
     }
 
+
+
     private void handleMessage(String message) {
         if (message.equalsIgnoreCase("quit")) {
             running = false;
-        } else {
-            out.println("Message: '" + message + "'.");
         }
+
+        String[] parts = message.split(" ");
+        String command = parts[0].toLowerCase();
+
+        // mdea kuidas paremini teha neid commande praegu
+        if (command.equals("register") && parts.length == 3) {
+            String error = server.registerUser(parts[1], parts[2]);
+            if (error==null) {
+                sendToClient("Account registered");
+            } else {
+                sendToClient("Error: " + error);
+            }
+        } else if (command.equals("login") && parts.length == 3) {
+            User found = server.loginUser(parts[1], parts[2]);
+            if (found != null) {
+                this.user = found;
+                this.authenticated = true;
+                sendToClient("Logging successful, " + user.getUsername());
+            } else {
+                sendToClient("ERROR Invalid username or password");
+            }
+
+        } else {
+            // if authenticated then you reach this
+            server.routeMessage(message, this);
+            // out.println("Message: '" + message + "'.");
+        }
+
+
+
     }
 
     private void cleanup() {

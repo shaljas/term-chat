@@ -19,7 +19,9 @@ public class User {
         return username;
     }
 
-    void login() {
+    public String getPasswordHash() { return passwordHash; }
+
+    void login(String password) {
         this.isOnline = true;
         // TODO: implementeerida login loogika, nt kontrollida parooli ja uuendada kasutaja olekut
     }

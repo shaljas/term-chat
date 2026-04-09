@@ -3,6 +3,7 @@ import termchat.model.ChatRoom;
 import termchat.model.Message;
 import termchat.model.User;
 import termchat.repository.MessageRepository;
+import termchat.repository.UserRepository;
 
 import java.io.IOException;
 import java.net.Socket;
@@ -14,6 +15,9 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.UUID;
+
+import static termchat.service.EncryptionService.encryptPassword;
 
 public class Server {
     private final List<User> users;
@@ -21,13 +25,15 @@ public class Server {
     private final Map<String, Session> activeSessions;
     private final List<ClientHandler> clientHandlers;
     private final MessageRepository messageRepository;
+    private final UserRepository userRepository;
 
     public Server() {
-        this.users = null;
+        this.users = new ArrayList<>();
         this.chatRooms = null;
         this.activeSessions = new ConcurrentHashMap<>();
         this.clientHandlers = new ArrayList<>();
         this.messageRepository = new MessageRepository();
+        this.userRepository = new UserRepository();
     }
 
     // Message isendi loomise meetod
@@ -86,7 +92,24 @@ public class Server {
 
     protected void createRoom(){}
 
-    protected void registerUser(){}
+    public List<User> getUsers() {
+        return users;
+    }
+
+    public synchronized String registerUser(String username, String password) {
+        if (userRepository.usernameExists(username)) {
+            return "Username already taken";
+        }
+        User newUser = new User(UUID.randomUUID().toString(), username, encryptPassword(password));
+        userRepository.saveUser(newUser);
+        return null; // null = success
+    }
+
+    public synchronized User loginUser(String username, String password) {
+        return userRepository.findByUsername(username)
+                .filter(u -> u.getPasswordHash().equals(encryptPassword(password)))
+                .orElse(null);
+    }
 
     private void authenticateUser(){}
 

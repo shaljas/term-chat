@@ -14,6 +14,8 @@ public class ClientApp {
                 BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
                 Scanner userInput = new Scanner(System.in)
         ){
+            System.out.println("Client app started");
+            //getInput(userInput, out, in);
             echoTest(userInput, out, in);
 
         }
