@@ -23,8 +23,8 @@ public class Server {
     private final MessageRepository messageRepository;
 
     public Server() {
-        this.users = null;
-        this.chatRooms = null;
+        this.users = new ArrayList<>();
+        this.chatRooms = new ArrayList<>();
         this.activeSessions = new ConcurrentHashMap<>();
         this.clientHandlers = new ArrayList<>();
         this.messageRepository = new MessageRepository();
@@ -48,7 +48,8 @@ public class Server {
 
         for (ClientHandler clientHandler : clientHandlers) {
             if (clientHandler != sender) {
-                clientHandler.sendToClient(storedMessage.getContent());
+                clientHandler.sendToClient(
+                        storedMessage.getSender() + ": " + storedMessage.getContent());
             }
         }
     }
@@ -89,8 +90,6 @@ public class Server {
     protected void registerUser(){}
 
     private void authenticateUser(){}
-
-    private void routeMessage(){}
 
     private void notifyOfflineUser(){}
 }
