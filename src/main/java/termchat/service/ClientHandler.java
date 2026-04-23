@@ -118,13 +118,13 @@ public class ClientHandler implements Runnable {
     }
 
     private void listenLoop() {
-        String message;
+        String messageIn;
         try {
-            while (running && (message = in.readLine()) != null) {
-                handleMessage(message);
+            while (running && (messageIn = in.readLine()) != null) {
+                handleMessage(messageIn);
             }
         } catch (IOException e) {
-            System.out.println("ClientHandler loop readline error: " + e.getMessage());
+            System.out.println("ClientHandler loop incoming message readline error: " + e.getMessage());
         }
     }
 
