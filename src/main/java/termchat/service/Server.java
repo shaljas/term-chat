@@ -50,12 +50,12 @@ public class Server {
         String outboundMessage = storedMessage.getSender().getUsername() + ": " + storedMessage.getContent();
 
         // lisasin selle selleks, et saaks ise ka aru, kas sõnum läks teele
-        sender.sendToClient(outboundMessage);
+        // sender.sendToClient(outboundMessage);
 
         for (ClientHandler clientHandler : clientHandlers) {
             if (clientHandler != sender) {
                 clientHandler.sendToClient(
-                        storedMessage.getSender() + ": " + storedMessage.getContent());
+                        storedMessage.getSender().getUsername() + ": " + storedMessage.getContent());
             }
         }
     }
