@@ -19,30 +19,9 @@ public class User {
         return username;
     }
 
-    void login() {
-        this.isOnline = true;
-        // TODO: implementeerida login loogika, nt kontrollida parooli ja uuendada kasutaja olekut
-    }
+    public String getPasswordHash() { return passwordHash; }
 
-    void logout() {
-        this.isOnline = false;
-        // TODO: implementeerida logout loogika, nt uuendada kasutaja olekut, sessioonist välja logimine jne
-    }
-
-    void sendMessage(String message, User recipient) {
-        // TODO: implementeerida sõnumi saatmise loogika, nt luua sõnumi objekt, salvestada see andmebaasi ja saata see Userile
-        // v chat roomi?
-    }
-
-    void joinChatRoom(ChatRoom chatRoom) {
-        // TODO: implementeerida chat roomi liitumise loogika, nt lisada kasutaja chat roomi osalejate nimekirja
-    }
-
-    void leaveChatRoom(ChatRoom chatRoom) {
-        // samamoodi võiks olla ka loogika chatRoomist lahkumiseks, nt eemaldada kasutaja chat roomi osalejate nimekirjast
-    }
-
-    List<Message> getMessageHistory(ChatRoom chatRoom) {
-        return null; // TODO: implementeerida sõnumi ajaloo toomise loogika, nt pärida sõnumid andmebaasist ja tagastada need
+    public void setOnline(boolean online) {
+        isOnline = online;
     }
 }
