@@ -8,44 +8,63 @@ import java.net.Socket;
 import java.util.Scanner;
 
 public class ClientApp {
+    private static final String HOST = "localhost";
+    private static final int PORT = 3000;
 
-    public static void main(String[] args) throws IOException {
-        try (   Socket socket = new Socket("localhost",3000);
-                PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-                BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-                Scanner userInput = new Scanner(System.in)
+    public static void main(String[] args) {
+        ClientApp clientApp = new ClientApp();
+        clientApp.start();
+    }
+
+    public void start() {
+        try (
+            Socket socket = new Socket(HOST, PORT);
+            PrintWriter serverOut = new PrintWriter(socket.getOutputStream(), true);
+            BufferedReader serverIn = new BufferedReader(new InputStreamReader(socket.getInputStream()))
         ){
             System.out.println("Client app started");
 
-            InputListenerService listener = new InputListenerService(in);
+            ServerMessageListener listener = startListener(serverIn);
+            handleUserInput(serverOut, listener);
 
-            listener.start();
-
-            while (userInput.hasNextLine()) {
-                String input = userInput.nextLine();
-                out.println(input);
-
-                // TODO: ideaalis võiks olla ka kliendil teada commandid. praegu /quit sulgeb serveri pool ühenduse, aga loop jääb ikka ootama serveri outputi
-                if (input.equalsIgnoreCase("/quit")) break;
-            }
-
-            listener.waitForCompleation();
-
-
-        } catch (InterruptedException e) {
-            // TODO: vaja paremat error handlimist, prg lic lasin IntelliJ geneda
-            throw new RuntimeException(e);
+        } catch (IOException e) {
+            System.out.println("ClientApp start error: is the server running? " + e.getMessage());
         }
     }
 
-    private static void echoTest(Scanner userInput, PrintWriter out, BufferedReader in) throws IOException {
-        String incoming;
-        do {
-            if (userInput.hasNext()) {
-                out.println(userInput.nextLine());
-            }
-            incoming = in.readLine();
-            System.out.println(incoming);
-        } while (incoming != null);
+    private ServerMessageListener startListener(BufferedReader serverIn) {
+        ServerMessageListener listener = new ServerMessageListener(serverIn);
+        listener.start();
+        return listener;
     }
+
+    private void handleUserInput(PrintWriter serverOut, ServerMessageListener listener) {
+        Scanner userInput = new Scanner(System.in);
+
+        while (userInput.hasNextLine()) {
+            String input = userInput.nextLine();
+
+            serverOut.println(input);
+
+            if (isQuitCommand(input)) {
+                listener.shutdown();
+                waitForListener(listener);
+                break;
+            }
+        }
+    }
+
+    private boolean isQuitCommand(String input) {
+        return "/quit".equalsIgnoreCase(input);
+    }
+
+    private void waitForListener(ServerMessageListener listener) {
+        try {
+            listener.join();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+
 }

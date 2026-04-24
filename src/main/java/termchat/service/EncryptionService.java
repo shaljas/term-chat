@@ -23,11 +23,11 @@ public class EncryptionService {
         }
         catch(NoSuchAlgorithmException e)
         {
-            e.printStackTrace();
+            System.out.println("Algorithm exception: " + e.getMessage());
         }
         catch(UnsupportedEncodingException e)
         {
-            e.printStackTrace();
+            System.out.println("Unsupported encoding exception: " + e.getMessage());
         }
         return sha1;
     }
