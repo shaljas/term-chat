@@ -9,7 +9,6 @@ import java.util.Map;
 
 public class CommandRegistry {
     private final Map<String, CommandHandler> commands = new HashMap<>();
-
     public CommandRegistry() {
         registerCommands();
     }
@@ -73,6 +72,7 @@ public class CommandRegistry {
             ctx.send("/quit - stops the application");
             ctx.send("/createroom <name> - Creates a new chatroom");
             ctx.send("/switchroom <chatroom> - Opens the chatroom");
+            ctx.send("/rooms - display the user's chatrooms");
             ctx.send("/leave - leaves the current chatroom");
             ctx.send("/rename <name> - Renames the current chatroom");
             ctx.send("/adduser <username> - adds an user to the chatroom");
@@ -81,6 +81,19 @@ public class CommandRegistry {
         });
 
         commands.put("/quit", (args, ctx) -> ctx.stop());
+
+        commands.put("/rooms", (args, ctx) -> {
+
+            User user = ctx.getUser();
+            if (user == null) {
+                ctx.send("Log in or register an account first.");
+                return;
+            }
+            ctx.send("Chatrooms You're in:");
+            for (ChatRoom chatroom : user.getChatrooms()) {
+                ctx.send(chatroom.getName());
+            }
+        });
 
         commands.put("/switchroom", (args, ctx) -> {
            if (args.length < 2) {
@@ -118,7 +131,7 @@ public class CommandRegistry {
                 ctx.send("Log in or register an account first.");
                 return;
             }
-            String name = String.join(" ", Arrays.copyOfRange(args, 1, args.length));
+            String name = String.join(" ", Arrays.copyOfRange(args, 1, args.length)).trim();
             try {
                 synchronized (this) {
                     if (ctx.server().getChatRooms().stream().anyMatch(c -> c.getName().equalsIgnoreCase(name))) {
@@ -173,7 +186,7 @@ public class CommandRegistry {
                 return;
             }
 
-            String name = String.join(" ", Arrays.copyOfRange(args, 1, args.length));
+            String name = String.join(" ", Arrays.copyOfRange(args, 1, args.length)).trim();
             chat.rename(name, user);
             if (chat.getName().equals(name)) {
                 ctx.send("Chatroom succesfully renamed to " + name + ".");
@@ -199,18 +212,18 @@ public class CommandRegistry {
                 return;
             }
 
-            User userToBeAdded = ctx.server().getUserRepository().findByUsername(args[1]).orElse(null);
+            User userToBeAdded = ctx.server().getUserRepository().findByUsername(args[1].trim()).orElse(null);
             if (userToBeAdded == null) {
                 ctx.send("Could not find user " + args[1] + ".");
                 return;
             }
-            if (chat.getUserByName(args[1]) != null) {
+            if (chat.getUserByName(args[1].trim()) != null) {
                 ctx.send("User is already in the chatroom.");
                 return;
             }
             chat.addUser(userToBeAdded);
             userToBeAdded.getChatrooms().add(chat);
-            if (chat.getUserByName(args[1]) != null) {
+            if (chat.getUserByName(args[1].trim()) != null) {
                 ctx.send(userToBeAdded.getUsername() + " has been added to the chatroom.");
                 return;
             }
@@ -227,7 +240,7 @@ public class CommandRegistry {
             };
             User user = ctx.getUser();
             ChatRoom chat = user.getActiveChat();
-            User userToBeRemoved = chat.getUserByName(args[1]);
+            User userToBeRemoved = chat.getUserByName(args[1].trim());
 
             if (user == userToBeRemoved) {
                 ctx.send("You cannot remove yourself! Use /leave instead.");
@@ -246,7 +259,7 @@ public class CommandRegistry {
             chat.removeUser(userToBeRemoved);
             userToBeRemoved.setActiveChat(null);
             userToBeRemoved.getChatrooms().remove(chat);
-            if (chat.getUserByName(args[1]) == null) {
+            if (chat.getUserByName(args[1].trim()) == null) {
                 ctx.send(userToBeRemoved.getUsername() + " has been removed from the chatroom");
                 return;
             }
