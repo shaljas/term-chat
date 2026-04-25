@@ -9,34 +9,27 @@ import java.io.IOException;
 import java.net.Socket;
 import java.net.ServerSocket;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static termchat.service.EncryptionService.encryptPassword;
 
 public class Server {
-    private final List<User> users;
-    private final List<ChatRoom> chatRooms;
-    private final Map<String, Session> activeSessions;
     private final List<ClientHandler> clientHandlers;
+    private final List<ChatRoom> chatRooms;
+
     private final MessageRepository messageRepository;
     private final UserRepository userRepository;
 
     public Server() {
-        this.users = new ArrayList<>();
-        this.chatRooms = null;
-        this.activeSessions = new ConcurrentHashMap<>();
+        this.chatRooms = new ArrayList<>();
         this.clientHandlers = new ArrayList<>();
         this.messageRepository = new MessageRepository();
         this.userRepository = new UserRepository();
     }
 
-    // Message isendi loomise meetod
     private Message createAndStoreMessage (String content, ClientHandler sender) {
         Message message = new Message(messageRepository.getAllMessages().size() +1, content, sender.getUser(), LocalDateTime.now());
         messageRepository.saveMessage(message);
@@ -46,11 +39,6 @@ public class Server {
     protected void routeMessage(String content, ClientHandler sender) {
         Message storedMessage = createAndStoreMessage(content, sender);
         storedMessage.markAsDelivered();
-
-        String outboundMessage = storedMessage.getSender().getUsername() + ": " + storedMessage.getContent();
-
-        // lisasin selle selleks, et saaks ise ka aru, kas sõnum läks teele
-        // sender.sendToClient(outboundMessage);
 
         for (ClientHandler clientHandler : clientHandlers) {
             if (clientHandler != sender) {
@@ -71,7 +59,6 @@ public class Server {
             }
         } finally {
             pool.shutdown();
-            activeSessions.forEach((k,v) -> v.endSession());
         }
     }
 
@@ -83,24 +70,17 @@ public class Server {
         clientHandlers.remove(handler);
     }
 
-    protected void addSession(Session session) {
-        activeSessions.put(session.getSessionId(), session);
-    }
-
-    protected void removeSession(Session session) {
-        activeSessions.remove(session.getSessionId());
-    }
-
     protected void createRoom(){}
 
-    public List<User> getUsers() {
-        return users;
+    public List<User> getOnlineUsers() {
+        return clientHandlers.stream().map(ClientHandler::getUser).filter(Objects::nonNull).collect(Collectors.toList());
     }
 
     public synchronized String registerUser(String username, String password) {
         if (userRepository.usernameExists(username)) {
             return "Username already taken";
         }
+
         User newUser = new User(UUID.randomUUID().toString(), username, encryptPassword(password));
         userRepository.saveUser(newUser);
         return null; // null = success
@@ -111,8 +91,4 @@ public class Server {
                 .filter(u -> u.getPasswordHash().equals(encryptPassword(password)))
                 .orElse(null);
     }
-
-    private void authenticateUser(){}
-
-    private void notifyOfflineUser(){}
 }
