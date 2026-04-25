@@ -5,6 +5,7 @@ import termchat.model.User;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class CommandRegistry {
@@ -89,9 +90,14 @@ public class CommandRegistry {
                 ctx.send("Log in or register an account first.");
                 return;
             }
-            ctx.send("Chatrooms You're in:");
-            for (ChatRoom chatroom : user.getChatrooms()) {
-                ctx.send(chatroom.getName());
+
+            List<ChatRoom> chatrooms = ctx.server().RoomManager().getUserChatRooms(user);
+
+            if (chatrooms.isEmpty()) {
+                ctx.send("You are not in any chatrooms.");
+            } else {
+                ctx.send("Chatrooms You are in:");
+                chatrooms.forEach(c -> ctx.send(c.getName()));
             }
         });
 
@@ -106,16 +112,15 @@ public class CommandRegistry {
                return;
            }
            String name = String.join(" ", Arrays.copyOfRange(args, 1, args.length));
-           ChatRoom chat = user.getChatrooms()
-                   .stream()
-                   .filter(c -> c.getName().equalsIgnoreCase(name))
-                   .findFirst().orElse(null);
-           if (chat == null) {
+
+           ChatRoom chatroom = ctx.server().RoomManager().getRoom(name, user);
+
+           if (chatroom == null) {
                ctx.send("Chatroom does not exist or you have not been added to it.");
                return;
            }
-           user.setActiveChat(chat);
-           ctx.send("Switched to " + chat.getName());
+           user.setActiveChat(chatroom);
+           ctx.send("Switched to " + chatroom.getName());
         });
 
         commands.put("/createroom", (args, ctx) -> {
@@ -132,40 +137,26 @@ public class CommandRegistry {
                 return;
             }
             String name = String.join(" ", Arrays.copyOfRange(args, 1, args.length)).trim();
-            try {
-                synchronized (this) {
-                    if (ctx.server().getChatRooms().stream().anyMatch(c -> c.getName().equalsIgnoreCase(name))) {
-                        ctx.send("Chatroom with that name exists already.");
-                        return;
-                    }
-                    int control = ctx.server().getChatRooms().size();
-                    ctx.server().createRoom(name, user);
-                    if (ctx.server().getChatRooms().size() == control) {
-                        throw new Exception();
-                    }
-                }
-                ctx.send("Room " + name + " created sucessfully.");
-            } catch (Exception e) {
-                ctx.send("Could not create a chatroom.");
+            String error = ctx.server().RoomManager().createRoom(name, user);
+            if (error == null) {
+                ctx.send("Chatroom created.");
+                ChatRoom chat = ctx.server().RoomManager().getRoom(name, user);
+                user.setActiveChat(chat);
+                return;
             }
+            ctx.send("ERROR: " + error);
         });
 
         commands.put("/deleteroom", (args, ctx) -> {
 
             if (failedTheUsualChecks(ctx)) return;
             User user = ctx.getUser();
-            ChatRoom chat = user.getActiveChat();
 
-            if (chat.getOwner() != user) {
-                ctx.send("Only the owner can use this command.");
-                return;
+            String error = ctx.server().RoomManager().deleteRoom(user.getActiveChat().getName(), user);
+            if (error != null) {
+                ctx.send("ERROR: " + error);
             }
 
-            ctx.server().deleteroom(chat);
-            if (ctx.server().getChatRooms().contains(chat)) {
-                ctx.send("Something went wrong. The chatroom has not been deleted.");
-                return;
-            }
             ctx.send("The chatroom has been deleted.");
         });
 
@@ -179,20 +170,14 @@ public class CommandRegistry {
                 return;
             }
             User user = ctx.getUser();
-            ChatRoom chat = user.getActiveChat();
-
-            if (chat.getOwner() != user) {
-                ctx.send("Only the owner can use this command.");
-                return;
-            }
 
             String name = String.join(" ", Arrays.copyOfRange(args, 1, args.length)).trim();
-            chat.rename(name, user);
-            if (chat.getName().equals(name)) {
-                ctx.send("Chatroom succesfully renamed to " + name + ".");
+            String error = ctx.server().RoomManager().renameRoom(name, user);
+            if (error != null) {
+                ctx.send("ERROR: " + error);
                 return;
             }
-            ctx.send("Could not rename the chatroom.");
+            ctx.send("Chatroom successfully renamed to " + name + ".");
         });
 
         commands.put("/adduser", (args, ctx) -> {
@@ -205,29 +190,13 @@ public class CommandRegistry {
                 return;
             }
             User user = ctx.getUser();
-            ChatRoom chat = user.getActiveChat();
 
-            if (chat.getOwner() != user) {
-                ctx.send("Only the owner can use this command.");
+            String error = ctx.server().RoomManager().addUser(user, args[1].trim());
+            if (error != null) {
+                ctx.send("ERROR: " + error);
                 return;
             }
-
-            User userToBeAdded = ctx.server().getUserRepository().findByUsername(args[1].trim()).orElse(null);
-            if (userToBeAdded == null) {
-                ctx.send("Could not find user " + args[1] + ".");
-                return;
-            }
-            if (chat.getUserByName(args[1].trim()) != null) {
-                ctx.send("User is already in the chatroom.");
-                return;
-            }
-            chat.addUser(userToBeAdded);
-            userToBeAdded.getChatrooms().add(chat);
-            if (chat.getUserByName(args[1].trim()) != null) {
-                ctx.send(userToBeAdded.getUsername() + " has been added to the chatroom.");
-                return;
-            }
-            ctx.send("Could not add the user.");
+            ctx.send("Successfully added user to chatroom.");
         });
 
         commands.put("/removeuser", (args, ctx) -> {
@@ -239,50 +208,24 @@ public class CommandRegistry {
                 return;
             };
             User user = ctx.getUser();
-            ChatRoom chat = user.getActiveChat();
-            User userToBeRemoved = chat.getUserByName(args[1].trim());
 
-            if (user == userToBeRemoved) {
-                ctx.send("You cannot remove yourself! Use /leave instead.");
-                return;
-            }
+            String error = ctx.server().RoomManager().removeUser(user, args[1].trim());
 
-            if (chat.getOwner() != user) {
-                ctx.send("Only the owner can use this command.");
+            if (error != null) {
+                ctx.send("ERROR: " + error);
                 return;
             }
-
-            if (userToBeRemoved == null) {
-                ctx.send("Could not find the user from this chatroom.");
-                return;
-            }
-            chat.removeUser(userToBeRemoved);
-            userToBeRemoved.setActiveChat(null);
-            userToBeRemoved.getChatrooms().remove(chat);
-            if (chat.getUserByName(args[1].trim()) == null) {
-                ctx.send(userToBeRemoved.getUsername() + " has been removed from the chatroom");
-                return;
-            }
-            ctx.send("Could not remove the user.");
+            ctx.send("Successfully removed user from chatroom.");
         });
 
         commands.put("/leave", (args, ctx) -> {
            if (failedTheUsualChecks(ctx)) return;
            User user = ctx.getUser();
-           ChatRoom chat = user.getActiveChat();
-            if (chat.getParticipants().size() > 1 && user == chat.getOwner()) {
-                ctx.send("You cannot leave as the owner while there are other members in the chatroom.");
-                ctx.send("You can:");
-                ctx.send("A: Appoint another member as the chatroom's owner and try again.");
-                ctx.send("B: Kick all other members first and try again.");
-                ctx.send("C: Use /deleteroom;");
-                return;
-            }
-           chat.removeUser(user);
-           user.setActiveChat(null);
-           user.getChatrooms().remove(chat);
-           if (chat.getParticipants().isEmpty()) {
-               ctx.server().deleteroom(chat);
+
+           String error = ctx.server().RoomManager().leaveRoom(user);
+           if (error != null) {
+               ctx.send("ERROR: " + error);
+               return;
            }
            ctx.send("You have left the chatroom.");
         });
@@ -297,20 +240,14 @@ public class CommandRegistry {
                 return;
             }
             User user = ctx.getUser();
-            ChatRoom chat = user.getActiveChat();
 
-            if (chat.getOwner() != user) {
-                ctx.send("Only the owner can use this command.");
+            String error = ctx.server().RoomManager().changeOwner(user, args[1].trim());
+
+            if (error != null) {
+                ctx.send("ERROR: " + error);
                 return;
             }
-
-            chat.changeowner(args[1], user);
-
-            if (chat.getOwner() != user) {
-                ctx.send("Owner successfully changed to " + chat.getOwner().getUsername());
-                return;
-            }
-            ctx.send("Could not change the owner.");
+            ctx.send("Succesfully changed the owner.");
         });
     }
 

@@ -7,7 +7,6 @@ public class User {
     private String userId;
     private String username;
     private String passwordHash;
-    private List<ChatRoom> chatrooms = new ArrayList<>();
     private ChatRoom activeChat = null;
     private boolean isOnline;
 
@@ -16,10 +15,6 @@ public class User {
         this.username = username;
         this.passwordHash = passwordHash;
         this.isOnline = false;
-    }
-
-    public List<ChatRoom> getChatrooms() {
-        return chatrooms;
     }
 
     public ChatRoom getActiveChat() {

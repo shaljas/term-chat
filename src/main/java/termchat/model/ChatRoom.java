@@ -9,27 +9,25 @@ public class ChatRoom {
 
     private final String ID;
     private String name;
-    private final List<User> participants = new ArrayList<>();
-    private User owner;
+    private final List<User> members = new ArrayList<>();
     private final List<Message> messages = new ArrayList<>();
 
     public String getName() {
         return this.name;
     }
 
-    public User getOwner() {
-        return owner;
+    public void setName(String name) {
+        this.name = name;
     }
 
-    public List<User> getParticipants() {
-        return participants;
+    public List<User> getMembers() {
+        return members;
     }
 
-    public ChatRoom(String name, User owner) {
+    public ChatRoom(String name, User user) {
         this.name = name;
         this.ID = UUID.randomUUID().toString();
-        this.participants.add(owner);
-        this.owner = owner;
+        this.members.add(user);
     }
 
     public String getID() {
@@ -37,34 +35,21 @@ public class ChatRoom {
     }
 
     public void addUser(User user) {
-        participants.add(user);
+        members.add(user);
     }
 
     public void removeUser(User user) {
-        participants.remove(user);
+        members.remove(user);
     }
 
     public void broadcastMessage(Message message) {
         messages.add(message);
     }
 
-    public void rename(String newName, User user) {
-        if (user != owner) return;
-        this.name = newName;
-    }
-
     public User getUserByName(String username) {
-        return participants.stream()
+        return members.stream()
                 .filter(p -> p.getUsername().equalsIgnoreCase(username))
                 .findFirst().orElse(null);
-    }
-
-    public void changeowner(String username, User user) {
-        if (user != owner) return;
-        User newOwner = getUserByName(username);
-        if (newOwner != null) {
-            this.owner = newOwner;
-        }
     }
 
     public List<Message> getHistory() {

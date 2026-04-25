@@ -20,6 +20,7 @@ import static termchat.service.EncryptionService.encryptPassword;
 public class Server {
     private final List<ClientHandler> clientHandlers;
     private final List<ChatRoom> chatRooms;
+    private final ChatRoomFactory crf;
 
     private final MessageRepository messageRepository;
     private final UserRepository userRepository;
@@ -29,6 +30,7 @@ public class Server {
         this.clientHandlers = new ArrayList<>();
         this.messageRepository = new MessageRepository();
         this.userRepository = new UserRepository();
+        this.crf = new ChatRoomFactory(this.chatRooms, this.userRepository);
     }
 
     private Message createAndStoreMessage (String content, ClientHandler sender) {
@@ -63,6 +65,10 @@ public class Server {
         }
     }
 
+    public ChatRoomFactory RoomManager() {
+        return crf;
+    }
+
     public synchronized void addClientHandler (ClientHandler handler) {
         clientHandlers.add(handler);
     }
@@ -71,32 +77,8 @@ public class Server {
         clientHandlers.remove(handler);
     }
 
-    public void createRoom(String chatname, User owner) {
-        ChatRoom chatroom = new ChatRoom(chatname, owner);
-        chatRooms.add(chatroom);
-        owner.getChatrooms().add(chatroom);
-        owner.setActiveChat(chatroom);
-    }
-
-    public void deleteroom(ChatRoom chatroom) {
-        if (!chatroom.getParticipants().isEmpty()) {
-            for (User participant : chatroom.getParticipants()) {
-                participant.getChatrooms().remove(chatroom);
-                if (participant.getActiveChat() == chatroom) {
-                    participant.setActiveChat(null);
-                }
-            }
-        }
-        chatroom.getParticipants().clear();
-        chatRooms.remove(chatroom);
-    }
-
     public UserRepository getUserRepository() {
         return userRepository;
-    }
-
-    public List<ChatRoom> getChatRooms() {
-        return chatRooms;
     }
 
     public List<User> getOnlineUsers() {
