@@ -206,7 +206,7 @@ public class CommandRegistry {
             }
             if (failedTheUsualChecks(ctx)) {
                 return;
-            };
+            }
             User user = ctx.getUser();
 
             String error = ctx.server().RoomManager().removeUser(user, args[1].trim());
