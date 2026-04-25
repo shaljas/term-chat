@@ -73,10 +73,29 @@ public class Server {
     protected void createRoom(String chatname, User owner) {
         ChatRoom chatroom = new ChatRoom(chatname, owner);
         chatRooms.add(chatroom);
+        owner.getChatrooms().add(chatroom);
+        owner.setActiveChat(chatroom);
     }
 
-    protected int getRoomsSize() {
-        return chatRooms.size();
+    protected void deleteroom(ChatRoom chatroom) {
+        if (!chatroom.getParticipants().isEmpty()) {
+            for (User participant : chatroom.getParticipants()) {
+                participant.getChatrooms().remove(chatroom);
+                if (participant.getActiveChat() == chatroom) {
+                    participant.setActiveChat(null);
+                }
+            }
+        }
+        chatroom.getParticipants().clear();
+        chatRooms.remove(chatroom);
+    }
+
+    public UserRepository getUserRepository() {
+        return userRepository;
+    }
+
+    public List<ChatRoom> getChatRooms() {
+        return chatRooms;
     }
 
     public List<User> getOnlineUsers() {

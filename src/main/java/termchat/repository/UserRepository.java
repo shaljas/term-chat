@@ -15,7 +15,7 @@ public class UserRepository {
 
     // Optional class - solution for representing optional values instead of null references. <https://www.baeldung.com/java-optional>
     public Optional<User> findByUsername(String username) {
-        return users.stream().filter(u -> u.getUsername().equals(username)).findFirst();
+        return users.stream().filter(u -> u.getUsername().equalsIgnoreCase(username)).findFirst();
     }
 
     public boolean usernameExists(String username) {

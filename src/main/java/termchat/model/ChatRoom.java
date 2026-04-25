@@ -2,6 +2,7 @@ package termchat.model;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public class ChatRoom {
@@ -14,6 +15,14 @@ public class ChatRoom {
 
     public String getName() {
         return this.name;
+    }
+
+    public User getOwner() {
+        return owner;
+    }
+
+    public List<User> getParticipants() {
+        return participants;
     }
 
     public ChatRoom(String name, User owner) {
@@ -39,22 +48,23 @@ public class ChatRoom {
         messages.add(message);
     }
 
-    public void rename(String newName) {
+    public void rename(String newName, User user) {
+        if (user != owner) return;
         this.name = newName;
     }
 
     public User getUserByName(String username) {
-        for (User user : participants) {
-            if (user.getUsername().equals(username)) {
-                return user;
-            }
-        }
-        return null;
+        return participants.stream()
+                .filter(p -> p.getUsername().equalsIgnoreCase(username))
+                .findFirst().orElse(null);
     }
 
     public void changeowner(String username, User user) {
         if (user != owner) return;
-        this.owner = getUserByName(username);
+        User newOwner = getUserByName(username);
+        if (newOwner != null) {
+            this.owner = newOwner;
+        }
     }
 
     public List<Message> getHistory() {
