@@ -1,4 +1,4 @@
-package termchat.service;
+package termchat.command;
 
 import termchat.model.ChatRoom;
 import termchat.model.User;

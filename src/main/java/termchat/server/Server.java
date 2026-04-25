@@ -1,4 +1,5 @@
-package termchat.service;
+package termchat.server;
+import termchat.client.ClientHandler;
 import termchat.model.ChatRoom;
 import termchat.model.Message;
 import termchat.model.User;
@@ -36,8 +37,8 @@ public class Server {
         return message;
     }
 
-    protected void routeMessage(String content, ClientHandler sender) {
-        Message storedMessage = createAndStoreMessage(content, sender);
+    public void routeMessage(String content, ClientHandler sender) {
+        Message storedMessage =  createAndStoreMessage(content, sender);
         storedMessage.markAsDelivered();
 
         for (ClientHandler clientHandler : clientHandlers) {
@@ -48,7 +49,7 @@ public class Server {
         }
     }
 
-    protected void start() throws IOException {
+    public void start() throws IOException {
         ExecutorService pool = Executors.newFixedThreadPool(6);
 
         try (ServerSocket serverSocket = new ServerSocket(3000)){
@@ -62,22 +63,22 @@ public class Server {
         }
     }
 
-    protected synchronized void addClientHandler (ClientHandler handler) {
+    public synchronized void addClientHandler (ClientHandler handler) {
         clientHandlers.add(handler);
     }
 
-    protected synchronized void removeClientHandler (ClientHandler handler) {
+    public synchronized void removeClientHandler (ClientHandler handler) {
         clientHandlers.remove(handler);
     }
 
-    protected void createRoom(String chatname, User owner) {
+    public void createRoom(String chatname, User owner) {
         ChatRoom chatroom = new ChatRoom(chatname, owner);
         chatRooms.add(chatroom);
         owner.getChatrooms().add(chatroom);
         owner.setActiveChat(chatroom);
     }
 
-    protected void deleteroom(ChatRoom chatroom) {
+    public void deleteroom(ChatRoom chatroom) {
         if (!chatroom.getParticipants().isEmpty()) {
             for (User participant : chatroom.getParticipants()) {
                 participant.getChatrooms().remove(chatroom);

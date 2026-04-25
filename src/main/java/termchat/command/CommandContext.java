@@ -1,6 +1,8 @@
-package termchat.service;
+package termchat.command;
 
+import termchat.client.ClientHandler;
 import termchat.model.User;
+import termchat.server.Server;
 
 public record CommandContext(ClientHandler clientHandler, Server server) {
 

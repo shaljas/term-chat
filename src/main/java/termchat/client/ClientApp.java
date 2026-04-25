@@ -1,4 +1,6 @@
-package termchat.service;
+package termchat.client;
+
+import termchat.server.ServerMessageListener;
 
 import java.io.BufferedReader;
 import java.io.IOException;

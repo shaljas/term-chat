@@ -1,4 +1,4 @@
-package termchat.service;
+package termchat.command;
 
 @FunctionalInterface
 public interface CommandHandler {

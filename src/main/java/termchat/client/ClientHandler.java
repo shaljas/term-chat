@@ -1,6 +1,9 @@
-package termchat.service;
+package termchat.client;
 
 import termchat.model.User;
+import termchat.command.CommandContext;
+import termchat.command.CommandRegistry;
+import termchat.server.Server;
 
 import java.io.*;
 import java.net.Socket;

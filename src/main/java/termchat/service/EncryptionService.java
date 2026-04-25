@@ -11,7 +11,7 @@ public class EncryptionService {
     Password hashing using SHA1
     https://stackoverflow.com/questions/4895523/java-string-to-sha1#:~:text=This%20is%20my%20solution%20of%20converting%20string%20to%20sha1%2E%20It%20works%20well%20in%20my%20Android%20app
      */
-    static String encryptPassword(String password)
+    public static String encryptPassword(String password)
     {
         String sha1 = "";
         try
