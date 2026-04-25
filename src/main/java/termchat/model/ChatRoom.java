@@ -8,14 +8,19 @@ public class ChatRoom {
 
     private final String ID;
     private String name;
-    private final List<User> participants;
-    private List<Message> messages;
+    private final List<User> participants = new ArrayList<>();
+    private User owner;
+    private final List<Message> messages = new ArrayList<>();
 
-    public ChatRoom(String name) {
+    public String getName() {
+        return this.name;
+    }
+
+    public ChatRoom(String name, User owner) {
         this.name = name;
         this.ID = UUID.randomUUID().toString();
-        this.participants = new ArrayList<>();
-        this.messages = new ArrayList<>();
+        this.participants.add(owner);
+        this.owner = owner;
     }
 
     public String getID() {
@@ -32,6 +37,24 @@ public class ChatRoom {
 
     public void broadcastMessage(Message message) {
         messages.add(message);
+    }
+
+    public void rename(String newName) {
+        this.name = newName;
+    }
+
+    public User getUserByName(String username) {
+        for (User user : participants) {
+            if (user.getUsername().equals(username)) {
+                return user;
+            }
+        }
+        return null;
+    }
+
+    public void changeowner(String username, User user) {
+        if (user != owner) return;
+        this.owner = getUserByName(username);
     }
 
     public List<Message> getHistory() {

@@ -1,5 +1,6 @@
 package termchat.service;
 
+import termchat.model.ChatRoom;
 import termchat.model.User;
 
 import java.util.HashMap;
@@ -73,6 +74,19 @@ public class CommandRegistry {
         });
 
         commands.put("/quit", (args, ctx) -> ctx.stop());
+
+        commands.put("/createroom", (args, ctx) -> {
+            int control = ctx.server().getRoomsSize();
+            ctx.server().createRoom(args[1], ctx.getUser());
+            if (ctx.server().getRoomsSize() > control) {
+                ctx.send("Room " + args[1] + " created successfully.");
+            } else {
+                ctx.send("Something went wrong. Please try again.");
+            }
+        });
+
+        commands.put("/rename", (args, ctx) -> {
+        });
     }
 
     public void execute(String input, CommandContext ctx) {

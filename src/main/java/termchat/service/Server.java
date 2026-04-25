@@ -70,7 +70,14 @@ public class Server {
         clientHandlers.remove(handler);
     }
 
-    protected void createRoom(){}
+    protected void createRoom(String chatname, User owner) {
+        ChatRoom chatroom = new ChatRoom(chatname, owner);
+        chatRooms.add(chatroom);
+    }
+
+    protected int getRoomsSize() {
+        return chatRooms.size();
+    }
 
     public List<User> getOnlineUsers() {
         return clientHandlers.stream().map(ClientHandler::getUser).filter(Objects::nonNull).collect(Collectors.toList());
