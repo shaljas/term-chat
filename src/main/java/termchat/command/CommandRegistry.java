@@ -1,6 +1,7 @@
 package termchat.command;
 
 import termchat.model.ChatRoom;
+import termchat.model.Message;
 import termchat.model.User;
 
 import java.util.Arrays;
@@ -27,6 +28,16 @@ public class CommandRegistry {
             String error = ctx.server().registerUser(args[1], args[2]);
 
             if (error==null) {
+                User newAccount = ctx.server().getUserRepository()
+                        .findByUsername(args[1]).orElse(null);
+                if (newAccount == null) {
+                    System.out.println("Null");
+                }
+                if (newAccount != null) {
+                    ChatRoom mainChat = ctx.server().RoomManager().getMainChat();
+                    mainChat.addUser(newAccount);
+                    newAccount.setActiveChat(mainChat);
+                }
                 ctx.send("Account registered");
             } else {
                 ctx.send("Error: " + error);
@@ -114,13 +125,13 @@ public class CommandRegistry {
            String name = String.join(" ", Arrays.copyOfRange(args, 1, args.length));
 
            ChatRoom chatroom = ctx.server().RoomManager().getRoom(name, user);
+           ctx.server().RoomManager().getMainChat().addUser(user);
 
            if (chatroom == null) {
                ctx.send("Chatroom does not exist or you have not been added to it.");
                return;
            }
            user.setActiveChat(chatroom);
-           ctx.send("Switched to " + chatroom.getName());
         });
 
         commands.put("/createroom", (args, ctx) -> {

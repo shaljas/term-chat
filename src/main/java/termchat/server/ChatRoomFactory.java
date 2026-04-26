@@ -1,6 +1,7 @@
 package termchat.server;
 
 import termchat.model.ChatRoom;
+import termchat.model.MainChatRoom;
 import termchat.model.User;
 import termchat.repository.UserRepository;
 
@@ -13,10 +14,14 @@ public class ChatRoomFactory {
     private final UserRepository users;
     private final HashMap<String, User> roomOwners = new HashMap<>();
     private final HashMap<String, ChatRoom> roomNames = new HashMap<>();
+    private final ChatRoom mainChat;
 
     public ChatRoomFactory(List<ChatRoom> chatroomList, UserRepository users) {
         this.serverChatRoomList = chatroomList;
         this.users = users;
+        this.mainChat = new MainChatRoom();
+        this.serverChatRoomList.add(mainChat);
+        roomNames.put("Main", mainChat);
     }
 
     public List<ChatRoom> getUserChatRooms(User user) {
@@ -24,6 +29,10 @@ public class ChatRoomFactory {
                 .stream()
                 .filter(c -> memberCheck(user, c))
                 .toList();
+    }
+
+    public ChatRoom getMainChat() {
+        return mainChat;
     }
 
     public boolean doesChatRoomExist(String chatname) {
@@ -64,7 +73,7 @@ public class ChatRoomFactory {
         if (!chatroom.getMembers().isEmpty()) {
             for (User participant : chatroom.getMembers()) {
                 if (participant.getActiveChat() == chatroom) {
-                    participant.setActiveChat(null);
+                    participant.setActiveChat(getMainChat());
                 }
             }
             chatroom.getMembers().clear();
@@ -135,7 +144,7 @@ public class ChatRoomFactory {
         }
 
         chatroom.removeUser(userToBeRemoved);
-        userToBeRemoved.setActiveChat(null);
+        userToBeRemoved.setActiveChat(getMainChat());
         if (!memberCheck(userToBeRemoved, chatroom)) {
             return null;
         }
@@ -150,6 +159,10 @@ public class ChatRoomFactory {
             return "You are not in this chatroom.";
         }
 
+        if (chatroom.getName().equals("Main")) {
+            return "You cannot leave the main chatroom.";
+        }
+
         if (chatroom.getMembers().size() > 1 && ownerCheck(user, chatroom)) {
             return """
                     You cannot leave as the owner while there are other members in the chatroom.
@@ -159,7 +172,7 @@ public class ChatRoomFactory {
                     C: Use /deleteroom.""";
         }
         chatroom.removeUser(user);
-        user.setActiveChat(null);
+        user.setActiveChat(getMainChat());
         if (chatroom.getMembers().isEmpty()) {
             deleteRoom(chatname, user);
         }
@@ -223,6 +236,7 @@ public class ChatRoomFactory {
 
     // check if user is the current owner of chatroom
     public boolean ownerCheck(User user, ChatRoom chatroom) {
+        if (chatroom.getClass() == MainChatRoom.class) return false;
         return (user == roomOwners.get(chatroom.getName()));
     }
 

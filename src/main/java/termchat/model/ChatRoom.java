@@ -29,11 +29,17 @@ public class ChatRoom {
         this.members.add(user);
     }
 
+    public ChatRoom() {
+        this.name = "Main";
+        this.ID = UUID.randomUUID().toString();
+    }
+
     public String getID() {
         return ID;
     }
 
     public void addUser(User user) {
+        if (getMembers().contains(user)) return;
         members.add(user);
     }
 

@@ -1,6 +1,7 @@
 package termchat.server;
 import termchat.client.ClientHandler;
 import termchat.model.ChatRoom;
+import termchat.model.MainChatRoom;
 import termchat.model.Message;
 import termchat.model.User;
 import termchat.repository.MessageRepository;
@@ -42,11 +43,12 @@ public class Server {
     public void routeMessage(String content, ClientHandler sender) {
         Message storedMessage =  createAndStoreMessage(content, sender);
         storedMessage.markAsDelivered();
-
-        for (ClientHandler clientHandler : clientHandlers) {
+        ChatRoom sendInRoom = sender.getUser().getActiveChat();
+        sendInRoom.broadcastMessage(storedMessage);
+        for (User user : sendInRoom.getMembers()) {
+            ClientHandler clientHandler = user.getClientHandler();
             if (clientHandler != sender) {
-                clientHandler.sendToClient(
-                        storedMessage.getSender().getUsername() + ": " + storedMessage.getContent());
+                clientHandler.sendToClient(storedMessage.format());
             }
         }
     }
