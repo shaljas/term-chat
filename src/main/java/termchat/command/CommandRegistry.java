@@ -98,6 +98,7 @@ public class CommandRegistry {
             ctx.send("/removeuser <username> - removes an user from the chatroom");
             ctx.send("/changeowner <username> - makes an user the new owner of the chatroom");
             ctx.send("/history <number> - displays recent messages from the current chatroom");
+            ctx.send("/users - displays users in the current chatroom");
         });
 
         commands.put("/quit", (args, ctx) -> ctx.stop());
@@ -121,9 +122,7 @@ public class CommandRegistry {
         });
 
         commands.put("/history", (args,ctx) -> {
-            if (failedTheUsualChecks(ctx)) {
-                return;
-            }
+            if (failedTheUsualChecks(ctx)) return;
 
             ChatRoom activeChat = ctx.getUser().getActiveChat();
             List<Message> messages = activeChat.getHistory();
@@ -155,6 +154,24 @@ public class CommandRegistry {
             for (int i = start; i < messages.size(); i++) {
               ctx.send(messages.get(i).format());
             }
+        });
+
+        commands.put("/users", (args, ctx) -> {
+            if (failedTheUsualChecks(ctx)) return;
+            ChatRoom activeChat = ctx.getUser().getActiveChat();
+            List<User> users = activeChat.getMembers();
+
+            if (users.isEmpty()) {
+                ctx.send("There are no users in this chatroom.");
+                return;
+            }
+
+            ctx.send("Users in " + activeChat.getName() + ":");
+
+            for (User user : users) {
+                ctx.send("– " + user.getUsername());
+            }
+
         });
 
         commands.put("/switchroom", (args, ctx) -> {
