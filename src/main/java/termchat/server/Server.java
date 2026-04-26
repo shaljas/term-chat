@@ -84,6 +84,35 @@ public class Server {
         }
     }
 
+    public String sendPrivateMessage(User sender, String receiverUsername, String content) {
+        if (sender == null) {
+            return "Log in or register an account first.";
+        }
+
+        if (receiverUsername == null || receiverUsername.trim().isEmpty()) {
+            return "Usage: /msg <username> <message>";
+        }
+
+        if (content == null || content.trim().isEmpty()) {
+            return "Private message cannot be empty.";
+        }
+
+        User receiver = userRepository.findByUsername(receiverUsername).orElse(null);
+
+        if (receiver == null) {
+            return "Could not find user " + receiverUsername + ".";
+        }
+
+        ClientHandler receiverHandler = receiver.getClientHandler();
+
+        if (receiverHandler == null) {
+            return "User " + receiver.getUsername() + " is not online.";
+        }
+
+        receiverHandler.sendToClient("[private from " + sender.getUsername() + "] " + content);
+        return null;
+    }
+
     public void start() throws IOException {
         ExecutorService pool = Executors.newFixedThreadPool(6);
 

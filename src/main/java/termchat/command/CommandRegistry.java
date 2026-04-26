@@ -99,6 +99,7 @@ public class CommandRegistry {
             ctx.send("/changeowner <username> - makes an user the new owner of the chatroom");
             ctx.send("/history <number> - displays recent messages from the current chatroom");
             ctx.send("/users - displays users in the current chatroom");
+            ctx.send("/msg <username> <message> - sends a private message to a user");
         });
 
         commands.put("/quit", (args, ctx) -> ctx.stop());
@@ -172,6 +173,26 @@ public class CommandRegistry {
                 ctx.send("– " + user.getUsername());
             }
 
+        });
+
+        commands.put("/msg", (args, ctx) -> {
+            if (ctx.getUser() == null) {
+                ctx.send("Log in or register an account first.");
+                return;
+            }
+
+            if (args.length < 3) {
+                ctx.send("Usage: /msg <username> <message>");
+                return;
+            }
+
+            String receiverUSername = args[1];
+            String content = String.join(" ", Arrays.copyOfRange(args, 2, args.length)).trim();
+
+            String error = ctx.server().sendPrivateMessage(ctx.getUser(), receiverUSername, content);
+            if (error != null) {
+                ctx.send("ERROR: " + error);
+            }
         });
 
         commands.put("/switchroom", (args, ctx) -> {
