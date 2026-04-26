@@ -325,14 +325,16 @@ public class CommandRegistry {
     }
 
     public void execute(String input, CommandContext ctx) {
-        String[] args = input.split(" ");
+        if (input == null || input.trim().isEmpty()) return;
+
+        String[] args = input.trim().split(" ");
         String command = args[0].toLowerCase();
 
         commands.getOrDefault(command, (a, c) -> {
             if (c.getUser() == null) {
                 c.send("Unknown command. Type /help");
             } else {
-                c.server().routeMessage(input, c.clientHandler());
+                c.server().routeMessage(input.trim(), c.clientHandler());
             }
         }).handle(args, ctx);
     }

@@ -47,6 +47,8 @@ public class Server {
             return;
         }
 
+        if (content == null || content.trim().isEmpty()) return;
+
         ChatRoom sendInRoom = sender.getUser().getActiveChat();
 
         if (sendInRoom == null) {
