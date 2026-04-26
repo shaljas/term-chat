@@ -72,7 +72,7 @@ public class Server {
         }
     }
 
-    public void broadcastSystemMesaage(ChatRoom room, String message) {
+    public void broadcastSystemMessage(ChatRoom room, String message) {
         synchronized (this) {
             for (ClientHandler clientHandler : clientHandlers) {
                 User receiver = clientHandler.getUser();
