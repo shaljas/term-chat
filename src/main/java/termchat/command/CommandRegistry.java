@@ -97,6 +97,9 @@ public class CommandRegistry {
             ctx.send("/adduser <username> - adds an user to the chatroom");
             ctx.send("/removeuser <username> - removes an user from the chatroom");
             ctx.send("/changeowner <username> - makes an user the new owner of the chatroom");
+            ctx.send("/history <number> - displays recent messages from the current chatroom");
+            ctx.send("/users - displays users in the current chatroom");
+            ctx.send("/msg <username> <message> - sends a private message to a user");
         });
 
         commands.put("/quit", (args, ctx) -> ctx.stop());
@@ -116,6 +119,79 @@ public class CommandRegistry {
             } else {
                 ctx.send("Chatrooms You are in:");
                 chatrooms.forEach(c -> ctx.send(c.getName()));
+            }
+        });
+
+        commands.put("/history", (args,ctx) -> {
+            if (failedTheUsualChecks(ctx)) return;
+
+            ChatRoom activeChat = ctx.getUser().getActiveChat();
+            List<Message> messages = activeChat.getHistory();
+
+            if (messages.isEmpty()) {
+                ctx.send("No messages in this chatroom yet.");
+                return;
+            }
+
+            int limit = 20;
+            if (args.length == 2) {
+                try {
+                    limit = Integer.parseInt(args[1]);
+
+                    if (limit <= 0) {
+                        ctx.send("History limit must be a positive number.");
+                        return;
+                    }
+                } catch (NumberFormatException e) {
+                    ctx.send("Usage: /history <number>");
+                    return;
+                }
+            } else if (args.length > 2) {
+                ctx.send("Usage: /history <number>");
+                return;
+            }
+
+            int start = Math.max(0, messages.size() - limit);
+            for (int i = start; i < messages.size(); i++) {
+              ctx.send(messages.get(i).format());
+            }
+        });
+
+        commands.put("/users", (args, ctx) -> {
+            if (failedTheUsualChecks(ctx)) return;
+            ChatRoom activeChat = ctx.getUser().getActiveChat();
+            List<User> users = activeChat.getMembers();
+
+            if (users.isEmpty()) {
+                ctx.send("There are no users in this chatroom.");
+                return;
+            }
+
+            ctx.send("Users in " + activeChat.getName() + ":");
+
+            for (User user : users) {
+                ctx.send("– " + user.getUsername());
+            }
+
+        });
+
+        commands.put("/msg", (args, ctx) -> {
+            if (ctx.getUser() == null) {
+                ctx.send("Log in or register an account first.");
+                return;
+            }
+
+            if (args.length < 3) {
+                ctx.send("Usage: /msg <username> <message>");
+                return;
+            }
+
+            String receiverUSername = args[1];
+            String content = String.join(" ", Arrays.copyOfRange(args, 2, args.length)).trim();
+
+            String error = ctx.server().sendPrivateMessage(ctx.getUser(), receiverUSername, content);
+            if (error != null) {
+                ctx.send("ERROR: " + error);
             }
         });
 
@@ -190,11 +266,17 @@ public class CommandRegistry {
             User user = ctx.getUser();
 
             String name = String.join(" ", Arrays.copyOfRange(args, 1, args.length)).trim();
+            String oldName = user.getActiveChat().getName();
             String error = ctx.server().RoomManager().renameRoom(name, user);
             if (error != null) {
                 ctx.send("ERROR: " + error);
                 return;
             }
+
+            ctx.server().broadcastSystemMesaage(
+                    user.getActiveChat(), "Chatroom " + oldName + " was renamed to " + name + "."
+            );
+
             ctx.send("Chatroom successfully renamed to " + name + ".");
         });
 
@@ -214,6 +296,11 @@ public class CommandRegistry {
                 ctx.send("ERROR: " + error);
                 return;
             }
+
+            ctx.server().broadcastSystemMesaage(
+                    user.getActiveChat(), args[1].trim() + " was added to the chatroom."
+            );
+
             ctx.send("Successfully added user to chatroom.");
         });
 
@@ -233,6 +320,11 @@ public class CommandRegistry {
                 ctx.send("ERROR: " + error);
                 return;
             }
+
+            ctx.server().broadcastSystemMesaage(
+                    user.getActiveChat(), args[1].trim() + " was removed from the chatroom."
+            );
+
             ctx.send("Successfully removed user from chatroom.");
         });
 
@@ -240,11 +332,18 @@ public class CommandRegistry {
            if (failedTheUsualChecks(ctx)) return;
            User user = ctx.getUser();
 
+           ChatRoom oldChat = user.getActiveChat();
+
            String error = ctx.server().RoomManager().leaveRoom(user);
            if (error != null) {
                ctx.send("ERROR: " + error);
                return;
            }
+
+           ctx.server().broadcastSystemMesaage(
+                   oldChat, user.getUsername() + " has left the chatroom."
+           );
+
            ctx.send("You have left the chatroom.");
         });
 
@@ -270,14 +369,16 @@ public class CommandRegistry {
     }
 
     public void execute(String input, CommandContext ctx) {
-        String[] args = input.split(" ");
+        if (input == null || input.trim().isEmpty()) return;
+
+        String[] args = input.trim().split(" ");
         String command = args[0].toLowerCase();
 
         commands.getOrDefault(command, (a, c) -> {
             if (c.getUser() == null) {
                 c.send("Unknown command. Type /help");
             } else {
-                c.server().routeMessage(input, c.clientHandler());
+                c.server().routeMessage(input.trim(), c.clientHandler());
             }
         }).handle(args, ctx);
     }

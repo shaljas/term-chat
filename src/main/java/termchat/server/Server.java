@@ -47,6 +47,8 @@ public class Server {
             return;
         }
 
+        if (content == null || content.trim().isEmpty()) return;
+
         ChatRoom sendInRoom = sender.getUser().getActiveChat();
 
         if (sendInRoom == null) {
@@ -68,6 +70,47 @@ public class Server {
                 }
             }
         }
+    }
+
+    public void broadcastSystemMesaage(ChatRoom room, String message) {
+        synchronized (this) {
+            for (ClientHandler clientHandler : clientHandlers) {
+                User receiver = clientHandler.getUser();
+
+                if (receiver != null && receiver.getActiveChat() == room) {
+                    clientHandler.sendToClient("[system] " + message);
+                }
+            }
+        }
+    }
+
+    public String sendPrivateMessage(User sender, String receiverUsername, String content) {
+        if (sender == null) {
+            return "Log in or register an account first.";
+        }
+
+        if (receiverUsername == null || receiverUsername.trim().isEmpty()) {
+            return "Usage: /msg <username> <message>";
+        }
+
+        if (content == null || content.trim().isEmpty()) {
+            return "Private message cannot be empty.";
+        }
+
+        User receiver = userRepository.findByUsername(receiverUsername).orElse(null);
+
+        if (receiver == null) {
+            return "Could not find user " + receiverUsername + ".";
+        }
+
+        ClientHandler receiverHandler = receiver.getClientHandler();
+
+        if (receiverHandler == null) {
+            return "User " + receiver.getUsername() + " is not online.";
+        }
+
+        receiverHandler.sendToClient("[private from " + sender.getUsername() + "] " + content);
+        return null;
     }
 
     public void start() throws IOException {

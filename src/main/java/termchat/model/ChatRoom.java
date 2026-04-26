@@ -20,7 +20,7 @@ public class ChatRoom {
     }
 
     public List<User> getMembers() {
-        return members;
+        return new ArrayList<>(members);
     }
 
     public ChatRoom(String name, User user) {
@@ -58,6 +58,6 @@ public class ChatRoom {
     }
 
     public List<Message> getHistory() {
-        return messages;
+        return new ArrayList<>(messages);
     }
 }
