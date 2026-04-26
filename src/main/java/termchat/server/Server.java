@@ -72,6 +72,18 @@ public class Server {
         }
     }
 
+    public void broadcastSystemMesaage(ChatRoom room, String message) {
+        synchronized (this) {
+            for (ClientHandler clientHandler : clientHandlers) {
+                User receiver = clientHandler.getUser();
+
+                if (receiver != null && receiver.getActiveChat() == room) {
+                    clientHandler.sendToClient("[system] " + message);
+                }
+            }
+        }
+    }
+
     public void start() throws IOException {
         ExecutorService pool = Executors.newFixedThreadPool(6);
 

@@ -245,11 +245,17 @@ public class CommandRegistry {
             User user = ctx.getUser();
 
             String name = String.join(" ", Arrays.copyOfRange(args, 1, args.length)).trim();
+            String oldName = user.getActiveChat().getName();
             String error = ctx.server().RoomManager().renameRoom(name, user);
             if (error != null) {
                 ctx.send("ERROR: " + error);
                 return;
             }
+
+            ctx.server().broadcastSystemMesaage(
+                    user.getActiveChat(), "Chatroom " + oldName + " was renamed to " + name + "."
+            );
+
             ctx.send("Chatroom successfully renamed to " + name + ".");
         });
 
@@ -269,6 +275,11 @@ public class CommandRegistry {
                 ctx.send("ERROR: " + error);
                 return;
             }
+
+            ctx.server().broadcastSystemMesaage(
+                    user.getActiveChat(), args[1].trim() + " was added to the chatroom."
+            );
+
             ctx.send("Successfully added user to chatroom.");
         });
 
@@ -288,6 +299,11 @@ public class CommandRegistry {
                 ctx.send("ERROR: " + error);
                 return;
             }
+
+            ctx.server().broadcastSystemMesaage(
+                    user.getActiveChat(), args[1].trim() + " was removed from the chatroom."
+            );
+
             ctx.send("Successfully removed user from chatroom.");
         });
 
@@ -295,11 +311,18 @@ public class CommandRegistry {
            if (failedTheUsualChecks(ctx)) return;
            User user = ctx.getUser();
 
+           ChatRoom oldChat = user.getActiveChat();
+
            String error = ctx.server().RoomManager().leaveRoom(user);
            if (error != null) {
                ctx.send("ERROR: " + error);
                return;
            }
+
+           ctx.server().broadcastSystemMesaage(
+                   oldChat, user.getUsername() + " has left the chatroom."
+           );
+
            ctx.send("You have left the chatroom.");
         });
 
