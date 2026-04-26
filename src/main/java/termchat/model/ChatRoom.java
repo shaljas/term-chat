@@ -8,14 +8,30 @@ public class ChatRoom {
 
     private final String ID;
     private String name;
-    private final List<User> participants;
-    private List<Message> messages;
+    private final List<User> members = new ArrayList<>();
+    private final List<Message> messages = new ArrayList<>();
 
-    public ChatRoom(String name) {
+    public String getName() {
+        return this.name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public List<User> getMembers() {
+        return members;
+    }
+
+    public ChatRoom(String name, User user) {
         this.name = name;
         this.ID = UUID.randomUUID().toString();
-        this.participants = new ArrayList<>();
-        this.messages = new ArrayList<>();
+        this.members.add(user);
+    }
+
+    public ChatRoom() {
+        this.name = "Main";
+        this.ID = UUID.randomUUID().toString();
     }
 
     public String getID() {
@@ -23,15 +39,22 @@ public class ChatRoom {
     }
 
     public void addUser(User user) {
-        participants.add(user);
+        if (getMembers().contains(user)) return;
+        members.add(user);
     }
 
     public void removeUser(User user) {
-        participants.remove(user);
+        members.remove(user);
     }
 
     public void broadcastMessage(Message message) {
         messages.add(message);
+    }
+
+    public User getUserByName(String username) {
+        return members.stream()
+                .filter(p -> p.getUsername().equalsIgnoreCase(username))
+                .findFirst().orElse(null);
     }
 
     public List<Message> getHistory() {
