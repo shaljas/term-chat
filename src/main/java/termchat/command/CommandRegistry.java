@@ -97,6 +97,7 @@ public class CommandRegistry {
             ctx.send("/adduser <username> - adds an user to the chatroom");
             ctx.send("/removeuser <username> - removes an user from the chatroom");
             ctx.send("/changeowner <username> - makes an user the new owner of the chatroom");
+            ctx.send("/history <number> - displays recent messages from the current chatroom");
         });
 
         commands.put("/quit", (args, ctx) -> ctx.stop());
@@ -116,6 +117,43 @@ public class CommandRegistry {
             } else {
                 ctx.send("Chatrooms You are in:");
                 chatrooms.forEach(c -> ctx.send(c.getName()));
+            }
+        });
+
+        commands.put("/history", (args,ctx) -> {
+            if (failedTheUsualChecks(ctx)) {
+                return;
+            }
+
+            ChatRoom activeChat = ctx.getUser().getActiveChat();
+            List<Message> messages = activeChat.getHistory();
+
+            if (messages.isEmpty()) {
+                ctx.send("No messages in this chatroom yet.");
+                return;
+            }
+
+            int limit = 20;
+            if (args.length == 2) {
+                try {
+                    limit = Integer.parseInt(args[1]);
+
+                    if (limit <= 0) {
+                        ctx.send("History limit must be a positive number.");
+                        return;
+                    }
+                } catch (NumberFormatException e) {
+                    ctx.send("Usage: /history <number>");
+                    return;
+                }
+            } else if (args.length > 2) {
+                ctx.send("Usage: /history <number>");
+                return;
+            }
+
+            int start = Math.max(0, messages.size() - limit);
+            for (int i = start; i < messages.size(); i++) {
+              ctx.send(messages.get(i).format());
             }
         });
 
