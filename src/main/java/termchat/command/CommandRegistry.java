@@ -28,17 +28,20 @@ public class CommandRegistry {
             String error = ctx.server().registerUser(args[1], args[2]);
 
             if (error==null) {
-                User newAccount = ctx.server().getUserRepository()
-                        .findByUsername(args[1]).orElse(null);
+                User newAccount = ctx.server().loginUser(args[1], args[2]);
                 if (newAccount == null) {
-                    System.out.println("Null");
+                    ctx.send("Error: account was created but automatic login failed.");
+                    return;
                 }
-                if (newAccount != null) {
-                    ChatRoom mainChat = ctx.server().RoomManager().getMainChat();
-                    mainChat.addUser(newAccount);
-                    newAccount.setActiveChat(mainChat);
-                }
-                ctx.send("Account registered");
+
+                ctx.setUser(newAccount);
+                newAccount.setOnline(true);
+
+                ChatRoom mainChat = ctx.server().RoomManager().getMainChat();
+                mainChat.addUser(newAccount);
+                newAccount.setActiveChat(mainChat);
+
+                ctx.send("Account registered and logged in as " + newAccount.getUsername());
             } else {
                 ctx.send("Error: " + error);
             }
@@ -60,6 +63,10 @@ public class CommandRegistry {
             if (found != null) {
                 ctx.setUser(found);
                 found.setOnline(true);
+                ChatRoom mainChat = ctx.server().RoomManager().getMainChat();
+                mainChat.addUser(found);
+                found.setActiveChat(mainChat);
+
                 ctx.send("Welcome " + found.getUsername());
             } else {
                 ctx.send("Error: invalid username or password");

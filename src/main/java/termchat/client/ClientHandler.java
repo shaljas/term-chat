@@ -30,7 +30,9 @@ public class ClientHandler implements Runnable {
 
     public void setUser(User user) {
         this.user = user;
-        user.setClientHandler(this);
+        if (user != null) {
+            user.setClientHandler(this);
+        }
     }
 
     private void setupStreams() {

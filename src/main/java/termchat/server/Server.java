@@ -1,7 +1,6 @@
 package termchat.server;
 import termchat.client.ClientHandler;
 import termchat.model.ChatRoom;
-import termchat.model.MainChatRoom;
 import termchat.model.Message;
 import termchat.model.User;
 import termchat.repository.MessageRepository;
@@ -41,14 +40,32 @@ public class Server {
     }
 
     public void routeMessage(String content, ClientHandler sender) {
-        Message storedMessage =  createAndStoreMessage(content, sender);
-        storedMessage.markAsDelivered();
+        User senderUser = sender.getUser();
+
+        if (senderUser == null) {
+            sender.sendToClient("Log in or register an account first.");
+            return;
+        }
+
         ChatRoom sendInRoom = sender.getUser().getActiveChat();
+
+        if (sendInRoom == null) {
+            sender.sendToClient("You are currently not in a chatroom.");
+            return;
+        }
+
+        Message storedMessage = createAndStoreMessage(content,sender);
+        storedMessage.markAsDelivered();
+
         sendInRoom.broadcastMessage(storedMessage);
-        for (User user : sendInRoom.getMembers()) {
-            ClientHandler clientHandler = user.getClientHandler();
-            if (clientHandler != sender) {
-                clientHandler.sendToClient(storedMessage.format());
+
+        synchronized (this) {
+            for (ClientHandler clientHandler : clientHandlers) {
+                User receiver = clientHandler.getUser();
+
+                if (receiver != null && receiver.getActiveChat() == sendInRoom) {
+                    clientHandler.sendToClient(storedMessage.format());
+                }
             }
         }
     }
