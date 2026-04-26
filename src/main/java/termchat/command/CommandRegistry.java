@@ -273,7 +273,7 @@ public class CommandRegistry {
                 return;
             }
 
-            ctx.server().broadcastSystemMesaage(
+            ctx.server().broadcastSystemMessage(
                     user.getActiveChat(), "Chatroom " + oldName + " was renamed to " + name + "."
             );
 
@@ -297,7 +297,7 @@ public class CommandRegistry {
                 return;
             }
 
-            ctx.server().broadcastSystemMesaage(
+            ctx.server().broadcastSystemMessage(
                     user.getActiveChat(), args[1].trim() + " was added to the chatroom."
             );
 
@@ -321,7 +321,7 @@ public class CommandRegistry {
                 return;
             }
 
-            ctx.server().broadcastSystemMesaage(
+            ctx.server().broadcastSystemMessage(
                     user.getActiveChat(), args[1].trim() + " was removed from the chatroom."
             );
 
@@ -340,7 +340,7 @@ public class CommandRegistry {
                return;
            }
 
-           ctx.server().broadcastSystemMesaage(
+           ctx.server().broadcastSystemMessage(
                    oldChat, user.getUsername() + " has left the chatroom."
            );
 
