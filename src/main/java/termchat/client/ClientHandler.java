@@ -22,7 +22,6 @@ public class ClientHandler implements Runnable {
     public ClientHandler(Socket socket, Server server) {
         this.socket = socket;
         this.server = server;
-        System.out.println("I am here");
     }
 
     public User getUser() {
