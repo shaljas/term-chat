@@ -4,6 +4,7 @@ import termchat.model.ChatRoom;
 import termchat.model.Message;
 import termchat.model.User;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -73,7 +74,7 @@ public class CommandRegistry {
             }
         });
 
-        commands.put("/logout", (args, ctx) -> {
+        commands.put("/logout", (_, ctx) -> {
             if (ctx.getUser() == null) {
                 ctx.send("You are not logged in");
                 return;
@@ -84,7 +85,7 @@ public class CommandRegistry {
 
         });
 
-        commands.put("/help", (args, ctx) -> {
+        commands.put("/help", (_, ctx) -> {
             ctx.send("/register <username> <password> - Creates a new account");
             ctx.send("/login <username> <password> - Log in to an account");
             ctx.send("/logout - logs the user out");
@@ -102,9 +103,9 @@ public class CommandRegistry {
             ctx.send("/msg <username> <message> - sends a private message to a user");
         });
 
-        commands.put("/quit", (args, ctx) -> ctx.stop());
+        commands.put("/quit", (_, ctx) -> ctx.stop());
 
-        commands.put("/rooms", (args, ctx) -> {
+        commands.put("/rooms", (_, ctx) -> {
 
             User user = ctx.getUser();
             if (user == null) {
@@ -157,7 +158,7 @@ public class CommandRegistry {
             }
         });
 
-        commands.put("/users", (args, ctx) -> {
+        commands.put("/users", (_, ctx) -> {
             if (failedTheUsualChecks(ctx)) return;
             ChatRoom activeChat = ctx.getUser().getActiveChat();
             List<User> users = activeChat.getMembers();
@@ -241,7 +242,7 @@ public class CommandRegistry {
             ctx.send("ERROR: " + error);
         });
 
-        commands.put("/deleteroom", (args, ctx) -> {
+        commands.put("/deleteroom", (_, ctx) -> {
 
             if (failedTheUsualChecks(ctx)) return;
             User user = ctx.getUser();
@@ -328,7 +329,7 @@ public class CommandRegistry {
             ctx.send("Successfully removed user from chatroom.");
         });
 
-        commands.put("/leave", (args, ctx) -> {
+        commands.put("/leave", (_, ctx) -> {
            if (failedTheUsualChecks(ctx)) return;
            User user = ctx.getUser();
 
@@ -366,6 +367,28 @@ public class CommandRegistry {
             }
             ctx.send("Succesfully changed the owner.");
         });
+
+        commands.put("/upload", (args, ctx) -> {
+            if (args.length != 2) {
+                ctx.send("/upload <file path>");
+            }
+        });
+
+        commands.put("/download", (args, ctx) -> {
+            if (args.length != 2) {
+                ctx.send("/download <file name>");
+                return;
+            }
+
+            User user = ctx.getUser();
+            ChatRoom room = user.getActiveChat();
+            String filename = args[1];
+            try {
+                ctx.server().FileHandler().sendFile(room, user, filename);
+            } catch (IOException e) {
+                ctx.send("An unhandled exception has occurred.");
+            }
+        });
     }
 
     public void execute(String input, CommandContext ctx) {
@@ -374,7 +397,7 @@ public class CommandRegistry {
         String[] args = input.trim().split(" ");
         String command = args[0].toLowerCase();
 
-        commands.getOrDefault(command, (a, c) -> {
+        commands.getOrDefault(command, (_, c) -> {
             if (c.getUser() == null) {
                 c.send("Unknown command. Type /help");
             } else {

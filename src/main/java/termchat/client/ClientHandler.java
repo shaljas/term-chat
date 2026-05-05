@@ -13,8 +13,8 @@ public class ClientHandler implements Runnable {
     private final Socket socket;
     private User user;
 
-    private BufferedReader in;
-    private PrintWriter out;
+    private DataInputStream in;
+    private DataOutputStream out;
 
     private boolean running = true;
     private final CommandRegistry commandRegistry = new CommandRegistry();
@@ -22,6 +22,7 @@ public class ClientHandler implements Runnable {
     public ClientHandler(Socket socket, Server server) {
         this.socket = socket;
         this.server = server;
+        System.out.println("I am here");
     }
 
     public User getUser() {
@@ -37,22 +38,36 @@ public class ClientHandler implements Runnable {
 
     private void setupStreams() {
         try {
-            in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            out = new PrintWriter(socket.getOutputStream(), true);
+            in = new DataInputStream(socket.getInputStream());
+            out = new DataOutputStream(socket.getOutputStream());
         } catch (IOException e) {
             System.out.println("ClientHandler stream setup error: " + e.getMessage());
         }
     }
 
     public void sendToClient(String message) {
-        if (out != null) out.println(message);
+        try {
+            if (out != null) {
+                out.writeInt(1); // message type
+                out.writeUTF(message);
+                out.flush();
+            }
+        } catch (IOException e) {
+            System.out.println("Error" + e.getMessage());
+        }
     }
 
     private void listenLoop() {
         String messageIn;
         try {
-            while (running && (messageIn = in.readLine()) != null) {
-                handleMessage(messageIn);
+            while (running) {
+                int type = in.readInt(); // 1 - message, 2 - file
+                if (type == 1) {
+                    messageIn = in.readUTF();
+                    handleMessage(messageIn);
+                } else if (type == 2) {
+                    server.FileHandler().receiveFile(user.getActiveChat(), user);
+                }
             }
         } catch (IOException e) {
             System.out.println("ClientHandler loop incoming message readline error: " + e.getMessage());
@@ -105,5 +120,13 @@ public class ClientHandler implements Runnable {
             cleanup();
             System.out.println(Thread.currentThread().getName() + " finished.");
         }
+    }
+
+    public DataInputStream getIn() {
+        return in;
+    }
+
+    public DataOutputStream getOut() {
+        return out;
     }
 }
