@@ -21,6 +21,7 @@ public class Server {
     private final List<ClientHandler> clientHandlers;
     private final List<ChatRoom> chatRooms;
     private final ChatRoomFactory crf;
+    private final FileTransfer filetransfer;
 
     private final MessageRepository messageRepository;
     private final UserRepository userRepository;
@@ -31,6 +32,7 @@ public class Server {
         this.messageRepository = new MessageRepository();
         this.userRepository = new UserRepository();
         this.crf = new ChatRoomFactory(this.chatRooms, this.userRepository);
+        this.filetransfer = new FileTransfer(this, "Data/files");
     }
 
     private Message createAndStoreMessage (String content, ClientHandler sender) {
@@ -125,6 +127,10 @@ public class Server {
         } finally {
             pool.shutdown();
         }
+    }
+
+    public FileTransfer FileHandler() {
+        return filetransfer;
     }
 
     public ChatRoomFactory RoomManager() {

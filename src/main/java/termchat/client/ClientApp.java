@@ -2,10 +2,7 @@ package termchat.client;
 
 import termchat.server.ServerMessageListener;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.Socket;
 import java.util.Scanner;
 
@@ -20,13 +17,13 @@ public class ClientApp {
 
     public void start() {
         try (
-            Socket socket = new Socket(HOST, PORT);
-            PrintWriter serverOut = new PrintWriter(socket.getOutputStream(), true);
-            BufferedReader serverIn = new BufferedReader(new InputStreamReader(socket.getInputStream()))
+                Socket socket = new Socket(HOST, PORT);
+                DataOutputStream serverOut = new DataOutputStream(socket.getOutputStream());
+                DataInputStream serverIn = new DataInputStream(socket.getInputStream())
         ){
             System.out.println("Client app started");
 
-            ServerMessageListener listener = startListener(serverIn);
+            ServerMessageListener listener = startListener(serverIn, serverOut);
             handleUserInput(serverOut, listener);
 
         } catch (IOException e) {
@@ -34,28 +31,37 @@ public class ClientApp {
         }
     }
 
-    private ServerMessageListener startListener(BufferedReader serverIn) {
+    private ServerMessageListener startListener(DataInputStream serverIn, DataOutputStream serverOut) {
         ServerMessageListener listener = new ServerMessageListener(serverIn);
         listener.start();
         return listener;
     }
 
-    private void handleUserInput(PrintWriter serverOut, ServerMessageListener listener) {
+    private void handleUserInput(DataOutputStream serverOut, ServerMessageListener listener) throws IOException {
         Scanner userInput = new Scanner(System.in);
 
         while (userInput.hasNextLine()) {
             String input = userInput.nextLine();
 
-            serverOut.println(input);
+            serverOut.writeInt(1); // message type input
+            serverOut.writeUTF(input);
 
             if (isQuitCommand(input)) {
                 listener.shutdown();
                 waitForListener(listener);
                 break;
             }
+
+            String[] params = input.split(" ");
+            if (params.length == 2 && isUploadCommand(params[0])) {
+                ClientFileService.handleUpload(params[1], serverOut);
+            }
         }
     }
 
+    private boolean isUploadCommand(String input) {
+        return "/upload".equalsIgnoreCase(input);
+    }
     private boolean isQuitCommand(String input) {
         return "/quit".equalsIgnoreCase(input);
     }
@@ -67,6 +73,4 @@ public class ClientApp {
             Thread.currentThread().interrupt();
         }
     }
-
-
 }
