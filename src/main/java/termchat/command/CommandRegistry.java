@@ -12,6 +12,8 @@ import java.util.Map;
 
 public class CommandRegistry {
     private final Map<String, CommandHandler> commands = new HashMap<>();
+    private final HistoryCommands historyCommands = new HistoryCommands();
+
     public CommandRegistry() {
         registerCommands();
     }
@@ -47,6 +49,8 @@ public class CommandRegistry {
                 ctx.send("Error: " + error);
             }
         });
+
+        commands.put("/history", historyCommands::history);
 
         commands.put("/login", (args, ctx) -> {
             if (ctx.getUser() != null) {
@@ -120,41 +124,6 @@ public class CommandRegistry {
             } else {
                 ctx.send("Chatrooms You are in:");
                 chatrooms.forEach(c -> ctx.send(c.getName()));
-            }
-        });
-
-        commands.put("/history", (args,ctx) -> {
-            if (failedTheUsualChecks(ctx)) return;
-
-            ChatRoom activeChat = ctx.getUser().getActiveChat();
-            List<Message> messages = activeChat.getHistory();
-
-            if (messages.isEmpty()) {
-                ctx.send("No messages in this chatroom yet.");
-                return;
-            }
-
-            int limit = 20;
-            if (args.length == 2) {
-                try {
-                    limit = Integer.parseInt(args[1]);
-
-                    if (limit <= 0) {
-                        ctx.send("History limit must be a positive number.");
-                        return;
-                    }
-                } catch (NumberFormatException e) {
-                    ctx.send("Usage: /history <number>");
-                    return;
-                }
-            } else if (args.length > 2) {
-                ctx.send("Usage: /history <number>");
-                return;
-            }
-
-            int start = Math.max(0, messages.size() - limit);
-            for (int i = start; i < messages.size(); i++) {
-              ctx.send(messages.get(i).format());
             }
         });
 
