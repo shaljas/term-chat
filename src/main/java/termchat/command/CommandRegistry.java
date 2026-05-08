@@ -185,6 +185,8 @@ public class CommandRegistry {
                return;
            }
            user.setActiveChat(chatroom);
+           ctx.send("Switched to " + chatroom.getName() + ".");
+           ctx.send("Use /history to view previous messages.");
         });
 
         commands.put("/createroom", (args, ctx) -> {
