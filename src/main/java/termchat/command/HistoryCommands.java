@@ -17,6 +17,11 @@ public class HistoryCommands {
             return;
         }
 
+        if (args.length >= 2 && args[1].equalsIgnoreCase("help")) {
+            showHistoryHelp(ctx);
+            return;
+        }
+
         if (args.length >= 2 && args[1].equalsIgnoreCase("from")) {
             showMessagesFromUser(args, ctx, messages);
             return;
@@ -49,6 +54,16 @@ public class HistoryCommands {
         for (int i = start; i < messages.size(); i++) {
             ctx.send(messages.get(i).format());
         }
+    }
+
+    private void showHistoryHelp(CommandContext ctx) {
+        ctx.send("Chat history commands: ");
+        ctx.send("/history - displays recent messages from the current chatroom");
+        ctx.send("/history <number> - displays the latest number of messages");
+        ctx.send("/history from <username> - displays messages from a user");
+        ctx.send("/history from <username> <number> - displays latest messages from a user");
+        ctx.send("/history search <keyword> - searches messages by keyword");
+        ctx.send("/history search <keyword> <number> - searches latest messages by keyword");
     }
 
     private void showMessagesContaining(String[] args, CommandContext ctx, List<Message> messages) {
