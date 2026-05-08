@@ -17,6 +17,11 @@ public class HistoryCommands {
             return;
         }
 
+        if (args.length >= 2 && args[1].equalsIgnoreCase("from")) {
+            sentMessagesFromUser(args, ctx, messages);
+            return;
+        }
+
         int limit = 20;
         if (args.length == 2) {
             try {
@@ -38,6 +43,38 @@ public class HistoryCommands {
         int start = Math.max(0, messages.size() - limit);
         for (int i = start; i < messages.size(); i++) {
             ctx.send(messages.get(i).format());
+        }
+    }
+
+    private void sentMessagesFromUser(String[] args, CommandContext ctx, List<Message> messages) {
+        if (args.length != 3 && args.length != 4) {
+            ctx.send("Usage: /history from <username> <number>");
+            return;
+        }
+
+        String username = args[2];
+        int limit = 20;
+
+        if (args.length == 4) {
+            try {
+                limit = Integer.parseInt(args[3]);
+                if (limit <= 0) {
+                    ctx.send("History limit must be a positive number.");
+                }
+            } catch (NumberFormatException e) {
+                ctx.send("Usage: /history from <username> <number>");
+            }
+        }
+
+        List<Message> filteredMessages = messages.stream().filter(message -> message.getSender().getUsername().equalsIgnoreCase(username)).toList();
+
+        if (filteredMessages.isEmpty()) {
+            ctx.send("No messages from " + username + " in this chatroom.");
+        }
+
+        int start = Math.max(0, filteredMessages.size()-limit);
+        for (int i = start; i < filteredMessages.size(); i++) {
+            ctx.send(filteredMessages.get(i).format());
         }
     }
 

@@ -2,8 +2,6 @@ package termchat.model;
 
 import termchat.client.ClientHandler;
 
-import java.util.List;
-
 public class User {
     private String userId;
     private String username;
@@ -33,10 +31,6 @@ public class User {
 
     public void setActiveChat(ChatRoom activeChat) {
         this.activeChat = activeChat;
-        List<Message> messagesToLoad = activeChat.getHistory();
-        for (Message message : messagesToLoad) {
-            getClientHandler().sendToClient(message.format());
-        }
     }
 
     public String getUsername() {
