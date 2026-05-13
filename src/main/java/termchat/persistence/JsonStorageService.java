@@ -1,6 +1,7 @@
 package termchat.persistence;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonSyntaxException;
 
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -43,7 +44,7 @@ public class JsonStorageService {
 
         try (FileReader reader = new FileReader(filePath.toFile())) {
             return gson.fromJson(reader, type);
-        } catch (IOException e) {
+        } catch (IOException | JsonSyntaxException e) {
             System.out.println("Could not load " + fileName + ": " + e.getMessage());
             return null;
         }
@@ -55,7 +56,7 @@ public class JsonStorageService {
 
         try (FileReader reader = new FileReader(filePath.toFile())) {
             return gson.fromJson(reader, type);
-        } catch (IOException e) {
+        } catch (IOException | JsonSyntaxException e) {
             System.out.println("Could not load " + fileName + ": " + e.getMessage());
             return null;
         }
