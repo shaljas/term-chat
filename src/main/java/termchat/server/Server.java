@@ -6,16 +6,19 @@ import termchat.model.User;
 import termchat.persistence.StoredMessage;
 import termchat.repository.MessageRepository;
 import termchat.repository.UserRepository;
+import termchat.service.EmailService;
 
 import java.io.IOException;
 import java.net.Socket;
 import java.net.ServerSocket;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
+import static termchat.model.Ansi.*;
 import static termchat.service.EncryptionService.encryptPassword;
 
 public class Server {
@@ -33,6 +36,7 @@ public class Server {
         this.messageRepository = new MessageRepository();
         this.userRepository = new UserRepository();
         this.crf = new ChatRoomFactory(this.chatRooms, this.userRepository);
+        this.filetransfer = new FileTransfer(this, "Data/files");
         loadChatHistoryFromStorage();
     }
 
@@ -94,7 +98,7 @@ public class Server {
                 User receiver = clientHandler.getUser();
 
                 if (receiver != null && receiver.getActiveChat() == room) {
-                    clientHandler.sendToClient("[system] " + message);
+                    clientHandler.sendToClient(YELLOW + "[system] " + message + RESET);
                 }
             }
         }
@@ -121,12 +125,39 @@ public class Server {
 
         ClientHandler receiverHandler = receiver.getClientHandler();
 
-        if (receiverHandler == null) {
-            return "User " + receiver.getUsername() + " is not online.";
+        Message dm = new Message(
+                messageRepository.getAllMessages().size() + 1,
+                content,
+                sender,
+                LocalDateTime.now()
+        );
+
+        if (!receiver.isOnline()) {
+            messageRepository.saveDM(dm, receiverUsername);
+            ClientHandler senderHandler = sender.getClientHandler();
+            if (senderHandler != null && senderHandler.shouldNotifyOffline(receiverUsername)) {
+                String receiverEmail = receiver.getEmail();
+                if (receiverEmail != null) {
+                    EmailService.sendDMNotification(receiverEmail, sender.getUsername());
+                }
+            }
+            return null;
         }
 
-        receiverHandler.sendToClient("[private from " + sender.getUsername() + "] " + content);
+        receiverHandler.sendToClient(MAGENTA + "[private from " + sender.getUsername() + "] " + content + RESET);
         return null;
+    }
+
+    public void deliverPendingDMs(User user, ClientHandler handler) {
+        List<StoredMessage> pending = messageRepository.getUndeliveredDMs(user.getUsername());
+        if (pending.isEmpty()) return;
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
+        for (StoredMessage dm : pending) {
+            LocalDateTime ts = LocalDateTime.parse(dm.getTimestamp());
+            handler.sendToClient(MAGENTA + "[" + ts.format(formatter) + "] [private from " + dm.getSenderUsername() + "] " + dm.getContent() + RESET);
+        }
+        messageRepository.markDMsAsDelivered(user.getUsername());
     }
 
     public void start() throws IOException {
@@ -167,12 +198,12 @@ public class Server {
         return clientHandlers.stream().map(ClientHandler::getUser).filter(Objects::nonNull).collect(Collectors.toList());
     }
 
-    public synchronized String registerUser(String username, String password) {
+    public synchronized String registerUser(String username, String password, String email) {
         if (userRepository.usernameExists(username)) {
             return "Username already taken";
         }
 
-        User newUser = new User(UUID.randomUUID().toString(), username, encryptPassword(password));
+        User newUser = new User(UUID.randomUUID().toString(), username, encryptPassword(password), email);
         userRepository.saveUser(newUser);
         return null; // null = success
     }

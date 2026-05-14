@@ -9,11 +9,17 @@ public class User {
     private ChatRoom activeChat = null;
     private boolean isOnline;
     private ClientHandler clientHandler;
+    private String email;
 
-    public User(String userId, String username, String passwordHash) {
+    public boolean isOnline() {
+        return isOnline;
+    }
+
+    public User(String userId, String username, String passwordHash, String email) {
         this.userId = userId;
         this.username = username;
         this.passwordHash = passwordHash;
+        this.email = email;
         this.isOnline = false;
     }
 
@@ -46,4 +52,6 @@ public class User {
     public void setOnline(boolean online) {
         isOnline = online;
     }
+
+    public String getEmail() { return email; }
 }

@@ -2,6 +2,9 @@ package termchat.model;
 import java.time.format.DateTimeFormatter;
 import java.time.LocalDateTime;
 
+import static termchat.model.Ansi.GRAY;
+import static termchat.model.Ansi.RESET;
+
 public class Message {
 
     private final int messageId;
@@ -23,7 +26,7 @@ public class Message {
 
     public String format() {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
-        return "[" + timestamp.format(formatter) +"] " + sender.getUsername() + ": " + content;
+        return GRAY + "[" + timestamp.format(formatter) +"] " + sender.getUsername() + ": " + content + RESET;
     }
 
     public int getMessageId() {

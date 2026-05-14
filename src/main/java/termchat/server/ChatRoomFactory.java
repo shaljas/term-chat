@@ -234,7 +234,7 @@ public class ChatRoomFactory {
         }
         chatroom.removeUser(user);
         user.setActiveChat(getMainChat());
-        if (chatroom.getMembers().isEmpty()) {
+        if (chatroom.getMembers().size() == 1) {
             deleteRoom(chatname, user);
         } else {
             saveChatRoomstoStorage();
