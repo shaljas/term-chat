@@ -33,6 +33,7 @@ public class Server {
         this.messageRepository = new MessageRepository();
         this.userRepository = new UserRepository();
         this.crf = new ChatRoomFactory(this.chatRooms, this.userRepository);
+        this.filetransfer = new FileTransfer(this, "Data/files");
         loadChatHistoryFromStorage();
     }
 
