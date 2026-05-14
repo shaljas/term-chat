@@ -23,6 +23,11 @@ public class ChatRoom {
         return new ArrayList<>(members);
     }
 
+    public ChatRoom(String ID, String name) {
+        this.ID = ID;
+        this.name = name;
+    }
+
     public ChatRoom(String name, User user) {
         this.name = name;
         this.ID = UUID.randomUUID().toString();
