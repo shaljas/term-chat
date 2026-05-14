@@ -1,5 +1,6 @@
 package termchat.service;
 
+import io.github.cdimascio.dotenv.Dotenv;
 import jakarta.mail.*;
 import jakarta.mail.internet.*;
 import java.util.Properties;
@@ -8,11 +9,13 @@ import java.util.Properties;
     The email most likely ends up in spam!
 */
 public class EmailService {
+
     private static final String SMTP_HOST = "smtp.gmail.com";
     private static final String SMTP_PORT = "587";
     // Left the mail and password exposed on purpose. It is a dummy email made for this task
-    private static final String FROM_EMAIL = "X";
-    private static final String APP_PASSWORD = "X";
+    private static Dotenv dotenv = Dotenv.load();
+    private static final String FROM_EMAIL = dotenv.get("EMAIL");
+    private static final String APP_PASSWORD = dotenv.get("PASSWORD");
 
     public static void sendDMNotification(String toEmail, String senderUsername) {
         Properties props = new Properties();
