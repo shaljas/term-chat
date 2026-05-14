@@ -22,6 +22,7 @@ public class Server {
     private final List<ClientHandler> clientHandlers;
     private final List<ChatRoom> chatRooms;
     private final ChatRoomFactory crf;
+    private final FileTransfer filetransfer;
 
     private final MessageRepository messageRepository;
     private final UserRepository userRepository;
@@ -87,7 +88,7 @@ public class Server {
         }
     }
 
-    public void broadcastSystemMesaage(ChatRoom room, String message) {
+    public void broadcastSystemMessage(ChatRoom room, String message) {
         synchronized (this) {
             for (ClientHandler clientHandler : clientHandlers) {
                 User receiver = clientHandler.getUser();
@@ -140,6 +141,10 @@ public class Server {
         } finally {
             pool.shutdown();
         }
+    }
+
+    public FileTransfer FileHandler() {
+        return filetransfer;
     }
 
     public ChatRoomFactory RoomManager() {
