@@ -58,6 +58,11 @@ public class CommandRegistry {
 
             User found = ctx.server().loginUser(args[1], args[2]);
 
+            // team agreed to not allow multiple accounts logged in at the same time
+            if (found.isOnline()) {
+                ctx.send("User has already been logged in.");
+            }
+
             if (found != null) {
                 ctx.setUser(found);
                 found.setOnline(true);

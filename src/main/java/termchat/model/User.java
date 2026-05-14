@@ -12,6 +12,10 @@ public class User {
     private boolean isOnline;
     private ClientHandler clientHandler;
 
+    public boolean isOnline() {
+        return isOnline;
+    }
+
     public User(String userId, String username, String passwordHash) {
         this.userId = userId;
         this.username = username;
