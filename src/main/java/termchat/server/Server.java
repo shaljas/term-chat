@@ -3,6 +3,7 @@ import termchat.client.ClientHandler;
 import termchat.model.ChatRoom;
 import termchat.model.Message;
 import termchat.model.User;
+import termchat.persistence.StoredMessage;
 import termchat.repository.MessageRepository;
 import termchat.repository.UserRepository;
 
@@ -32,13 +33,25 @@ public class Server {
         this.messageRepository = new MessageRepository();
         this.userRepository = new UserRepository();
         this.crf = new ChatRoomFactory(this.chatRooms, this.userRepository);
-        this.filetransfer = new FileTransfer(this, "Data/files");
+        loadChatHistoryFromStorage();
+    }
+
+    private void loadChatHistoryFromStorage() {
+        for (StoredMessage storedMessage : messageRepository.getStoredMessages()) {
+            ChatRoom chatRoom = crf.getRoomByName(storedMessage.getRoomName());
+            User sender = userRepository.findByUsername(storedMessage.getSenderUsername()).orElse(null);
+            if (chatRoom == null || sender == null) continue;
+
+            Message message = new Message(storedMessage.getMessageId(),storedMessage.getContent(),sender,LocalDateTime.parse(storedMessage.getTimestamp()));
+            if (storedMessage.isDelivered()) message.markAsDelivered();
+
+            messageRepository.addLoadedMessage(message);
+            chatRoom.broadcastMessage(message);
+        }
     }
 
     private Message createAndStoreMessage (String content, ClientHandler sender) {
-        Message message = new Message(messageRepository.getAllMessages().size() +1, content, sender.getUser(), LocalDateTime.now());
-        messageRepository.saveMessage(message);
-        return message;
+        return new Message(messageRepository.getAllMessages().size() +1, content, sender.getUser(), LocalDateTime.now());
     }
 
     public void routeMessage(String content, ClientHandler sender) {
@@ -61,6 +74,7 @@ public class Server {
         Message storedMessage = createAndStoreMessage(content,sender);
         storedMessage.markAsDelivered();
 
+        messageRepository.saveMessage(storedMessage, sendInRoom);
         sendInRoom.broadcastMessage(storedMessage);
 
         synchronized (this) {
