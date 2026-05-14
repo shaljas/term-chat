@@ -24,11 +24,11 @@ public class CommandRegistry {
                 ctx.send(formatError("Error: log out first"));
                 return;
             }
-            if (args.length != 3) {
-                ctx.send(formatError("Usage: register <username> <password>"));
+            if (args.length != 4) {
+                ctx.send(formatError("Usage: /register <username> <password> <email>"));
                 return;
             }
-            String error = ctx.server().registerUser(args[1], args[2]);
+            String error = ctx.server().registerUser(args[1], args[2], args[3]);
 
             if (error==null) {
                 User newAccount = ctx.server().loginUser(args[1], args[2]);

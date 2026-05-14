@@ -7,6 +7,8 @@ import termchat.server.Server;
 
 import java.io.*;
 import java.net.Socket;
+import java.util.HashSet;
+import java.util.Set;
 
 public class ClientHandler implements Runnable {
     private final Server server;
@@ -18,6 +20,7 @@ public class ClientHandler implements Runnable {
 
     private boolean running = true;
     private final CommandRegistry commandRegistry = new CommandRegistry();
+    private final Set<String> notifiedOfflineRecipients = new HashSet<>();
 
     public ClientHandler(Socket socket, Server server) {
         this.socket = socket;
@@ -129,5 +132,9 @@ public class ClientHandler implements Runnable {
 
     public DataOutputStream getOut() {
         return out;
+    }
+
+    public boolean shouldNotifyOffline(String username) {
+        return notifiedOfflineRecipients.add(username);
     }
 }

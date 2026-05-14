@@ -27,7 +27,7 @@ public class UserRepository {
 
         if (storedUsers == null) return;
         for (StoredUser storedUser : storedUsers) {
-            User user = new User(storedUser.getUserId(), storedUser.getUsername(), storedUser.getPasswordHash());
+            User user = new User(storedUser.getUserId(), storedUser.getUsername(), storedUser.getPasswordHash(), storedUser.getEmail());
             users.add(user);
         }
     }
@@ -41,7 +41,8 @@ public class UserRepository {
         List<StoredUser> storedUsers = users.stream().map(user -> new StoredUser(
                 user.getUserId(),
                 user.getUsername(),
-                user.getPasswordHash()
+                user.getPasswordHash(),
+                user.getEmail()
         )).toList();
         storageService.save(USERS_FILE, storedUsers);
     }

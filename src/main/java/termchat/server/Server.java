@@ -6,6 +6,7 @@ import termchat.model.User;
 import termchat.persistence.StoredMessage;
 import termchat.repository.MessageRepository;
 import termchat.repository.UserRepository;
+import termchat.service.EmailService;
 
 import java.io.IOException;
 import java.net.Socket;
@@ -133,7 +134,14 @@ public class Server {
 
         if (!receiver.isOnline()) {
             messageRepository.saveDM(dm, receiverUsername);
-            return "User " + receiver.getUsername() + " is not online.";
+            ClientHandler senderHandler = sender.getClientHandler();
+            if (senderHandler != null && senderHandler.shouldNotifyOffline(receiverUsername)) {
+                String receiverEmail = receiver.getEmail();
+                if (receiverEmail != null) {
+                    EmailService.sendDMNotification(receiverEmail, sender.getUsername());
+                }
+            }
+            return null;
         }
 
         receiverHandler.sendToClient(MAGENTA + "[private from " + sender.getUsername() + "] " + content + RESET);
@@ -190,12 +198,12 @@ public class Server {
         return clientHandlers.stream().map(ClientHandler::getUser).filter(Objects::nonNull).collect(Collectors.toList());
     }
 
-    public synchronized String registerUser(String username, String password) {
+    public synchronized String registerUser(String username, String password, String email) {
         if (userRepository.usernameExists(username)) {
             return "Username already taken";
         }
 
-        User newUser = new User(UUID.randomUUID().toString(), username, encryptPassword(password));
+        User newUser = new User(UUID.randomUUID().toString(), username, encryptPassword(password), email);
         userRepository.saveUser(newUser);
         return null; // null = success
     }
