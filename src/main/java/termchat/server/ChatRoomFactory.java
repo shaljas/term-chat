@@ -21,7 +21,7 @@ public class ChatRoomFactory {
     private final HashMap<String, ChatRoom> roomNames = new HashMap<>();
     private final ChatRoom mainChat;
     private final JsonStorageService storageService = new JsonStorageService();
-    private static final String chatrooms_file = "chatrooms.json";
+    private static final String CHATROOMS_FILE = "chatrooms.json";
 
     public ChatRoomFactory(List<ChatRoom> chatroomList, UserRepository users) {
         this.serverChatRoomList = chatroomList;
@@ -45,13 +45,13 @@ public class ChatRoomFactory {
             StoredChatRoom storedChatRoom = new StoredChatRoom(chatRoom.getID(), chatRoom.getName(), ownerUsername, memberUsernames);
             storedChatRooms.add(storedChatRoom);
         }
-        storageService.save(chatrooms_file, storedChatRooms);
+        storageService.save(CHATROOMS_FILE, storedChatRooms);
 
     }
 
     private void loadChatRoomsFromStorage() {
         Type chatRoomListType = new TypeToken<List<StoredChatRoom>>( ) {}.getType();
-        List<StoredChatRoom> storedChatRooms = storageService.load(chatrooms_file, chatRoomListType);
+        List<StoredChatRoom> storedChatRooms = storageService.load(CHATROOMS_FILE, chatRoomListType);
         if (storedChatRooms == null) return;
 
         for (StoredChatRoom storedChatRoom : storedChatRooms) {
@@ -149,6 +149,10 @@ public class ChatRoomFactory {
             return chatroom;
         }
         return null;
+    }
+
+    public ChatRoom getRoomByName(String chatname) {
+        return roomNames.get(chatname);
     }
 
     public String addUser(User user, String username) {
