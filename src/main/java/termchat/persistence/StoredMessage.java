@@ -3,6 +3,7 @@ package termchat.persistence;
 public class StoredMessage {
     private int messageId;
     private String roomName;
+    private String senderUsername;
     private String content;
     private String timestamp;
     private boolean delivered;
@@ -10,9 +11,10 @@ public class StoredMessage {
     public StoredMessage() {
     }
 
-    public StoredMessage(int messageId, String roomName, String content, String timestamp, boolean delivered) {
+    public StoredMessage(int messageId, String roomName, String senderUsername, String content, String timestamp, boolean delivered) {
         this.messageId = messageId;
         this.roomName = roomName;
+        this.senderUsername = senderUsername;
         this.content = content;
         this.timestamp = timestamp;
         this.delivered = delivered;
@@ -24,6 +26,10 @@ public class StoredMessage {
 
     public String getRoomName() {
         return roomName;
+    }
+
+    public String getSenderUsername() {
+        return senderUsername;
     }
 
     public String getContent() {

@@ -34,9 +34,7 @@ public class Server {
     }
 
     private Message createAndStoreMessage (String content, ClientHandler sender) {
-        Message message = new Message(messageRepository.getAllMessages().size() +1, content, sender.getUser(), LocalDateTime.now());
-        messageRepository.saveMessage(message);
-        return message;
+        return new Message(messageRepository.getAllMessages().size() +1, content, sender.getUser(), LocalDateTime.now());
     }
 
     public void routeMessage(String content, ClientHandler sender) {
@@ -59,6 +57,7 @@ public class Server {
         Message storedMessage = createAndStoreMessage(content,sender);
         storedMessage.markAsDelivered();
 
+        messageRepository.saveMessage(storedMessage, sendInRoom);
         sendInRoom.broadcastMessage(storedMessage);
 
         synchronized (this) {
