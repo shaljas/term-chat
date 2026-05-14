@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.net.Socket;
 import java.net.ServerSocket;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -123,12 +124,32 @@ public class Server {
 
         ClientHandler receiverHandler = receiver.getClientHandler();
 
-        if (receiverHandler == null) {
+        Message dm = new Message(
+                messageRepository.getAllMessages().size() + 1,
+                content,
+                sender,
+                LocalDateTime.now()
+        );
+
+        if (!receiver.isOnline()) {
+            messageRepository.saveDM(dm, receiverUsername);
             return "User " + receiver.getUsername() + " is not online.";
         }
 
         receiverHandler.sendToClient(MAGENTA + "[private from " + sender.getUsername() + "] " + content + RESET);
         return null;
+    }
+
+    public void deliverPendingDMs(User user, ClientHandler handler) {
+        List<StoredMessage> pending = messageRepository.getUndeliveredDMs(user.getUsername());
+        if (pending.isEmpty()) return;
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
+        for (StoredMessage dm : pending) {
+            LocalDateTime ts = LocalDateTime.parse(dm.getTimestamp());
+            handler.sendToClient(MAGENTA + "[" + ts.format(formatter) + "] [private from " + dm.getSenderUsername() + "] " + dm.getContent() + RESET);
+        }
+        messageRepository.markDMsAsDelivered(user.getUsername());
     }
 
     public void start() throws IOException {

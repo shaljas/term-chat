@@ -43,4 +43,8 @@ public class StoredMessage {
     public boolean isDelivered() {
         return delivered;
     }
+
+    public void setDelivered(boolean delivered) {
+        this.delivered = delivered;
+    }
 }

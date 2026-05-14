@@ -9,6 +9,7 @@ import termchat.persistence.StoredMessage;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class MessageRepository {
     private static final String MESSAGES_FILE = "messages.json";
@@ -62,5 +63,32 @@ public class MessageRepository {
 
     public void addLoadedMessage(Message message) {
         messages.add(message);
+    }
+
+    public void saveDM(Message message, String receiverUsername) {
+        messages.add(message);
+        StoredMessage storedMessage = new StoredMessage(
+                message.getMessageId(),
+                "dm:" + receiverUsername,
+                message.getSender().getUsername(),
+                message.getContent(),
+                message.getTimestamp().toString(),
+                false
+        );
+        storedMessages.add(storedMessage);
+        saveMessagesToStorage();
+    }
+
+    public List<StoredMessage> getUndeliveredDMs(String username) {
+        return storedMessages.stream()
+                .filter(m -> m.getRoomName().equals("dm:" + username) && !m.isDelivered())
+                .collect(Collectors.toList());
+    }
+
+    public void markDMsAsDelivered(String username) {
+        storedMessages.stream()
+                .filter(m -> m.getRoomName().equals("dm:" + username) && !m.isDelivered())
+                .forEach(m -> m.setDelivered(true));
+        saveMessagesToStorage();
     }
 }

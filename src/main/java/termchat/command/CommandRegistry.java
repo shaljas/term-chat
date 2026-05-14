@@ -45,6 +45,7 @@ public class CommandRegistry {
                 newAccount.setActiveChat(mainChat);
 
                 ctx.send("Account registered and logged in as " + newAccount.getUsername());
+                ctx.server().deliverPendingDMs(newAccount, ctx.clientHandler());
             } else {
                 ctx.send(formatError("Error: " + error));
             }
@@ -76,6 +77,7 @@ public class CommandRegistry {
                 found.setActiveChat(mainChat);
 
                 ctx.send("Welcome " + found.getUsername());
+                ctx.server().deliverPendingDMs(found, ctx.clientHandler());
             } else {
                 ctx.send(formatError("Error: invalid username or password"));
             }

@@ -29,12 +29,14 @@ public class ClientHandler implements Runnable {
     }
 
     public void setUser(User user) {
+        if (this.user != null) {
+            this.user.setClientHandler(null);  // delete the old reference as well, otherwise messages still go through
+        }
         this.user = user;
         if (user != null) {
             user.setClientHandler(this);
         }
     }
-
     private void setupStreams() {
         try {
             in = new DataInputStream(socket.getInputStream());
