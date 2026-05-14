@@ -15,6 +15,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
+import static termchat.model.Ansi.*;
 import static termchat.service.EncryptionService.encryptPassword;
 
 public class Server {
@@ -80,7 +81,7 @@ public class Server {
                 User receiver = clientHandler.getUser();
 
                 if (receiver != null && receiver.getActiveChat() == room) {
-                    clientHandler.sendToClient("[system] " + message);
+                    clientHandler.sendToClient(YELLOW + "[system] " + message + RESET);
                 }
             }
         }
@@ -111,7 +112,7 @@ public class Server {
             return "User " + receiver.getUsername() + " is not online.";
         }
 
-        receiverHandler.sendToClient("[private from " + sender.getUsername() + "] " + content);
+        receiverHandler.sendToClient(MAGENTA + "[private from " + sender.getUsername() + "] " + content + RESET);
         return null;
     }
 
