@@ -5,10 +5,7 @@ import termchat.model.Message;
 import termchat.model.User;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class CommandRegistry {
     private final Map<String, CommandHandler> commands = new HashMap<>();
@@ -98,7 +95,7 @@ public class CommandRegistry {
             ctx.send("/adduser <username> - adds an user to the chatroom");
             ctx.send("/removeuser <username> - removes an user from the chatroom");
             ctx.send("/changeowner <username> - makes an user the new owner of the chatroom");
-            ctx.send("/history <number> - displays recent messages from the current chatroom");
+            ctx.send("/history --from <username> --contains <content> --from <start> <end> --limit <number> - displays recent messages from the current chatroom");
             ctx.send("/users - displays users in the current chatroom");
             ctx.send("/msg <username> <message> - sends a private message to a user");
         });
@@ -128,34 +125,59 @@ public class CommandRegistry {
 
             ChatRoom activeChat = ctx.getUser().getActiveChat();
             List<Message> messages = activeChat.getHistory();
+            String fromUser = null;
+            String containsContent = null;
+            Integer rangeStart = null;
+            Integer rangeEnd = null;
+            int limit = 20; // default limit
 
             if (messages.isEmpty()) {
                 ctx.send("No messages in this chatroom yet.");
                 return;
             }
 
-            int limit = 20;
-            if (args.length == 2) {
-                try {
-                    limit = Integer.parseInt(args[1]);
-
-                    if (limit <= 0) {
-                        ctx.send("History limit must be a positive number.");
-                        return;
+            for (int i = 1; i < args.length; i++) {
+                switch (args[i]) {
+                    case "--limit" -> limit = Integer.parseInt(args[++i]);
+                    case "--from" -> fromUser = args[++i];
+                    case "--contains" -> containsContent = args[++i].toLowerCase();
+                    case "--range" -> {
+                        try {
+                            rangeStart = Integer.parseInt(args[++i]);
+                            rangeEnd = Integer.parseInt(args[++i]);
+                        } catch (NumberFormatException e) {
+                            ctx.send("Error: Unknown flag arguments, check /help");
+                            return;
+                        }
                     }
-                } catch (NumberFormatException e) {
-                    ctx.send("Usage: /history <number>");
-                    return;
+                    default -> {
+                        ctx.send("Error: Unknown flag, check /help");
+                    }
                 }
-            } else if (args.length > 2) {
-                ctx.send("Usage: /history <number>");
-                return;
             }
 
-            int start = Math.max(0, messages.size() - limit);
-            for (int i = start; i < messages.size(); i++) {
-              ctx.send(messages.get(i).format());
+            // --range filter
+            if (rangeStart != null && rangeEnd == null) {
+                messages = messages.subList(rangeStart, messages.size());
+            } else if (rangeStart != null && rangeEnd != null) {
+                messages = messages.subList(rangeStart, rangeEnd);
+            } else if (rangeStart == null && rangeEnd != null) {
+                messages = messages.subList(0, rangeEnd);
             }
+
+            // then user filter, message containing and limiter
+            String finalContainsContent = containsContent;
+            String finalFromUser = fromUser;
+
+            List<Message> filtered = messages.stream()
+                    .filter(message -> finalFromUser == null || message.getSender().getUsername().equalsIgnoreCase(finalFromUser))
+                    .filter(message -> finalContainsContent == null || message.getContent().toLowerCase().contains(finalContainsContent))
+                    .limit(limit)
+                    .toList();
+            if (filtered.isEmpty()) ctx.send("No messages meet your set flags");
+            filtered.forEach(m -> ctx.send(m.format()));
+
+
         });
 
         commands.put("/users", (_, ctx) -> {
@@ -394,7 +416,7 @@ public class CommandRegistry {
     public void execute(String input, CommandContext ctx) {
         if (input == null || input.trim().isEmpty()) return;
 
-        String[] args = input.trim().split(" ");
+        String[] args = tokenize(input.trim()).toArray(new String[0]);
         String command = args[0].toLowerCase();
 
         commands.getOrDefault(command, (_, c) -> {
@@ -416,5 +438,30 @@ public class CommandRegistry {
             return true;
         }
         return false;
+    }
+
+    private List<String> tokenize(String input) {
+        List<String> tokens = new ArrayList<>();
+        StringBuilder current = new StringBuilder();
+        boolean inQuotes = false;
+
+        for (char c : input.toCharArray()) {
+            if (c == '"') {
+                inQuotes = !inQuotes;
+            } else if (c == ' ' && !inQuotes) {
+                if (!current.isEmpty()) {
+                    tokens.add(current.toString());
+                    current.setLength(0);
+                }
+            } else {
+                current.append(c);
+            }
+        }
+
+        if (!current.isEmpty()) {
+            tokens.add(current.toString());
+        }
+
+        return tokens;
     }
 }
