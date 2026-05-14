@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Optional;
 
 public class UserRepository {
-    private static final String users_file = "users.json";
+    private static final String USERS_FILE = "users.json";
 
     private final List<User> users = new ArrayList<>();
     private final JsonStorageService storageService = new JsonStorageService();
@@ -23,7 +23,7 @@ public class UserRepository {
 
     private void loadUsersFromStorage() {
         Type userListType = new TypeToken<List<StoredUser>>() {}.getType();
-        List<StoredUser> storedUsers = storageService.load(users_file, userListType);
+        List<StoredUser> storedUsers = storageService.load(USERS_FILE, userListType);
 
         if (storedUsers == null) return;
         for (StoredUser storedUser : storedUsers) {
@@ -43,7 +43,7 @@ public class UserRepository {
                 user.getUsername(),
                 user.getPasswordHash()
         )).toList();
-        storageService.save(users_file, storedUsers);
+        storageService.save(USERS_FILE, storedUsers);
     }
 
     // Optional class - solution for representing optional values instead of null references. <https://www.baeldung.com/java-optional>
