@@ -1,10 +1,15 @@
 package termchat.server;
 
+import com.google.gson.reflect.TypeToken;
 import termchat.model.ChatRoom;
 import termchat.model.MainChatRoom;
 import termchat.model.User;
+import termchat.persistence.JsonStorageService;
+import termchat.persistence.StoredChatRoom;
 import termchat.repository.UserRepository;
 
+import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -15,6 +20,8 @@ public class ChatRoomFactory {
     private final HashMap<String, User> roomOwners = new HashMap<>();
     private final HashMap<String, ChatRoom> roomNames = new HashMap<>();
     private final ChatRoom mainChat;
+    private final JsonStorageService storageService = new JsonStorageService();
+    private static final String CHATROOMS_FILE = "chatrooms.json";
 
     public ChatRoomFactory(List<ChatRoom> chatroomList, UserRepository users) {
         this.serverChatRoomList = chatroomList;
@@ -22,6 +29,53 @@ public class ChatRoomFactory {
         this.mainChat = new MainChatRoom();
         this.serverChatRoomList.add(mainChat);
         roomNames.put("Main", mainChat);
+        loadChatRoomsFromStorage();
+    }
+
+    private void saveChatRoomstoStorage() {
+        List<StoredChatRoom> storedChatRooms = new ArrayList<>();
+
+        for (ChatRoom chatRoom : serverChatRoomList) {
+            if (chatRoom.getClass() == MainChatRoom.class) continue;
+
+            User owner = roomOwners.get(chatRoom.getName());
+            String ownerUsername = owner == null ? null : owner.getUsername();
+
+            List<String> memberUsernames = chatRoom.getMembers().stream().map(User::getUsername).toList();
+            StoredChatRoom storedChatRoom = new StoredChatRoom(chatRoom.getID(), chatRoom.getName(), ownerUsername, memberUsernames);
+            storedChatRooms.add(storedChatRoom);
+        }
+        storageService.save(CHATROOMS_FILE, storedChatRooms);
+
+    }
+
+    private void loadChatRoomsFromStorage() {
+        Type chatRoomListType = new TypeToken<List<StoredChatRoom>>( ) {}.getType();
+        List<StoredChatRoom> storedChatRooms = storageService.load(CHATROOMS_FILE, chatRoomListType);
+        if (storedChatRooms == null) return;
+
+        for (StoredChatRoom storedChatRoom : storedChatRooms) {
+            if (storedChatRoom.getName() == null || storedChatRoom.getName().equals("Main")) continue;
+
+            ChatRoom chatRoom = new ChatRoom(storedChatRoom.getId(), storedChatRoom.getName());
+
+            for (String username : storedChatRoom.getMemberUsernames()) {
+                User member = users.findByUsername(username).orElse(null);
+
+                if (member != null) {
+                    chatRoom.addUser(member);
+                }
+            }
+
+            User owner = users.findByUsername(storedChatRoom.getOwnerUsername()).orElse(null);
+
+            roomNames.put(chatRoom.getName(), chatRoom);
+            serverChatRoomList.add(chatRoom);
+
+            if (owner != null) {
+                roomOwners.put(chatRoom.getName(), owner);
+            }
+        }
     }
 
     public List<ChatRoom> getUserChatRooms(User user) {
@@ -58,6 +112,7 @@ public class ChatRoomFactory {
                     throw new Exception();
                 }
             }
+            saveChatRoomstoStorage();
             return null;
         } catch (Exception e) {
             return "Could not create a chatroom.";
@@ -76,11 +131,11 @@ public class ChatRoomFactory {
                     participant.setActiveChat(getMainChat());
                 }
             }
-            chatroom.getMembers().clear();
         }
         serverChatRoomList.remove(chatroom);
         roomNames.remove(chatname);
         roomOwners.remove(chatname);
+        saveChatRoomstoStorage();
         return null;
     }
 
@@ -94,6 +149,10 @@ public class ChatRoomFactory {
             return chatroom;
         }
         return null;
+    }
+
+    public ChatRoom getRoomByName(String chatname) {
+        return roomNames.get(chatname);
     }
 
     public String addUser(User user, String username) {
@@ -115,6 +174,7 @@ public class ChatRoomFactory {
         }
         chatroom.addUser(userToBeAdded);
         if (chatroom.getUserByName(username) != null) {
+            saveChatRoomstoStorage();
             return null;
         }
         return "Could not add the user.";
@@ -146,6 +206,7 @@ public class ChatRoomFactory {
         chatroom.removeUser(userToBeRemoved);
         userToBeRemoved.setActiveChat(getMainChat());
         if (!memberCheck(userToBeRemoved, chatroom)) {
+            saveChatRoomstoStorage();
             return null;
         }
         return "Could not remove the user.";
@@ -175,6 +236,8 @@ public class ChatRoomFactory {
         user.setActiveChat(getMainChat());
         if (chatroom.getMembers().size() == 1) {
             deleteRoom(chatname, user);
+        } else {
+            saveChatRoomstoStorage();
         }
         return null;
     }
@@ -200,6 +263,7 @@ public class ChatRoomFactory {
         roomOwners.replace(chatname, newOwner);
 
         if (ownerCheck(newOwner, chatroom)) {
+            saveChatRoomstoStorage();
             return null;
         }
         return "Could not change the owner.";
@@ -231,6 +295,7 @@ public class ChatRoomFactory {
         } catch (Exception e) {
             return "Could not change chatroom's name.";
         }
+        saveChatRoomstoStorage();
         return null;
     }
 

@@ -1,0 +1,17 @@
+[
+  {
+    "userId": "5f20dcca-01ce-469f-9814-2e0bf1faefa3",
+    "username": "owner",
+    "passwordHash": "40bd001563085fc35165329ea1ff5c5ecbdbbeef"
+  },
+  {
+    "userId": "be578614-732c-4601-acbc-5151613dbf66",
+    "username": "rob",
+    "passwordHash": "7e09c9d3e96378bf549fc283fd6e1e5b7014cc33"
+  },
+  {
+    "userId": "35219172-8fcc-4714-adeb-3840ef5e1152",
+    "username": "bob",
+    "passwordHash": "48181acd22b3edaebc8a447868a7df7ce629920a"
+  }
+]

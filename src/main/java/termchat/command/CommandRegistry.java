@@ -12,6 +12,8 @@ import static termchat.model.Ansi.RESET;
 
 public class CommandRegistry {
     private final Map<String, CommandHandler> commands = new HashMap<>();
+    private final HistoryCommands historyCommands = new HistoryCommands();
+
     public CommandRegistry() {
         registerCommands();
     }
@@ -128,73 +130,13 @@ public class CommandRegistry {
             }
         });
 
-        commands.put("/history", (args,ctx) -> {
-            if (failedTheUsualChecks(ctx)) return;
-
-            ChatRoom activeChat = ctx.getUser().getActiveChat();
-            List<Message> messages = activeChat.getHistory();
-            String fromUser = null;
-            String containsContent = null;
-            Integer rangeStart = null;
-            Integer rangeEnd = null;
-            int limit = 20; // default limit
-
-            if (messages.isEmpty()) {
-                ctx.send(formatError("No messages in this chatroom yet."));
-                return;
-            }
-
-            for (int i = 1; i < args.length; i++) {
-                switch (args[i]) {
-                    case "--limit" -> limit = Integer.parseInt(args[++i]);
-                    case "--from" -> fromUser = args[++i];
-                    case "--contains" -> containsContent = args[++i].toLowerCase();
-                    case "--range" -> {
-                        try {
-                            rangeStart = Integer.parseInt(args[++i]);
-                            rangeEnd = Integer.parseInt(args[++i]);
-                        } catch (NumberFormatException e) {
-                            ctx.send(formatError("Error: Unknown flag arguments, check /help"));
-                            return;
-                        }
-                    }
-                    default -> {
-                        ctx.send(formatError("Error: Unknown flag, check /help"));
-                    }
-                }
-            }
-
-            // --range filter
-            if (rangeStart != null && rangeEnd == null) {
-                messages = messages.subList(rangeStart, messages.size());
-            } else if (rangeStart != null && rangeEnd != null) {
-                messages = messages.subList(rangeStart, rangeEnd);
-            } else if (rangeStart == null && rangeEnd != null) {
-                messages = messages.subList(0, rangeEnd);
-            }
-
-            // then user filter, message containing and limiter
-            String finalContainsContent = containsContent;
-            String finalFromUser = fromUser;
-
-            List<Message> filtered = messages.stream()
-                    .filter(message -> finalFromUser == null || message.getSender().getUsername().equalsIgnoreCase(finalFromUser))
-                    .filter(message -> finalContainsContent == null || message.getContent().toLowerCase().contains(finalContainsContent))
-                    .limit(limit)
-                    .toList();
-            if (filtered.isEmpty()) ctx.send(formatError("No messages meet your set flags"));
-            filtered.forEach(m -> ctx.send(m.format()));
-
-
-        });
-
         commands.put("/users", (_, ctx) -> {
             if (failedTheUsualChecks(ctx)) return;
             ChatRoom activeChat = ctx.getUser().getActiveChat();
             List<User> users = activeChat.getMembers();
 
             if (users.isEmpty()) {
-                ctx.send(formatError("There are no users in this chatroom."));
+                ctx.send("There are no users in this chatroom.");
                 return;
             }
 
@@ -424,7 +366,7 @@ public class CommandRegistry {
     public void execute(String input, CommandContext ctx) {
         if (input == null || input.trim().isEmpty()) return;
 
-        String[] args = tokenize(input.trim()).toArray(new String[0]);
+        String[] args = input.trim().split(" ");
         String command = args[0].toLowerCase();
 
         commands.getOrDefault(command, (_, c) -> {
