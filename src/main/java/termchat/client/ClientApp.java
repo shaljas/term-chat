@@ -31,7 +31,7 @@ public class ClientApp {
         }
     }
 
-    private ServerMessageListener startListener(DataInputStream serverIn, DataOutputStream serverOut) {
+    private ServerMessageListener startListener(DataInputStream serverIn) {
         ServerMessageListener listener = new ServerMessageListener(serverIn);
         listener.start();
         return listener;
