@@ -29,6 +29,7 @@ public class CommandRegistry {
 
         commands.put("/rooms", (ignored, ctx) -> new RoomsCommand().handle(null, ctx));
         commands.put("/users", (ignored, ctx) -> new UsersCommand().handle(null, ctx));
+        commands.put("/history", historyCommands::history);
 
         commands.put("/msg", (args, ctx) -> new MessageCommand().handle(args, ctx));
 

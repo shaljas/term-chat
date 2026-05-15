@@ -23,7 +23,7 @@ public class ClientApp {
         ){
             System.out.println("Client app started");
 
-            ServerMessageListener listener = startListener(serverIn, serverOut);
+            ServerMessageListener listener = startListener(serverIn);
             handleUserInput(serverOut, listener);
 
         } catch (IOException e) {

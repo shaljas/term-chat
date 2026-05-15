@@ -9,16 +9,16 @@ public class HistoryCommands {
     public void history(String[] args, CommandContext ctx) {
         if (failedTheUsualChecks(ctx)) return;
 
+        if (args.length >= 2 && args[1].equalsIgnoreCase("help")) {
+            showHistoryHelp(ctx);
+            return;
+        }
+
         ChatRoom activeChat = ctx.getUser().getActiveChat();
         List<Message> messages = activeChat.getHistory();
 
         if (messages.isEmpty()) {
             ctx.send("No messages in this chatroom yet.");
-            return;
-        }
-
-        if (args.length >= 2 && args[1].equalsIgnoreCase("help")) {
-            showHistoryHelp(ctx);
             return;
         }
 
@@ -68,7 +68,7 @@ public class HistoryCommands {
 
     private void showMessagesContaining(String[] args, CommandContext ctx, List<Message> messages) {
         if (args.length != 3 && args.length != 4) {
-            ctx.send("Usage: /history from <keyword> <number>");
+            ctx.send("Usage: /history search <keyword> <number>");
             return;
         }
 
@@ -142,11 +142,11 @@ public class HistoryCommands {
 
     private boolean failedTheUsualChecks(CommandContext ctx) {
         if (ctx.getUser() == null) {
-            ctx.send("Log in or create an account first.");
+            ctx.sendError("Log in or create an account first.");
             return true;
         }
         if (ctx.getUser().getActiveChat() == null) {
-            ctx.send("You are currently not in a chatroom.");
+            ctx.sendError("You are currently not in a chatroom.");
             return true;
         }
         return false;
