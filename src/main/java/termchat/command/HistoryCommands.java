@@ -7,7 +7,7 @@ import java.util.List;
 
 public class HistoryCommands {
     public void history(String[] args, CommandContext ctx) {
-        if (failedTheUsualChecks(ctx)) return;
+        if (ctx.cannotExecuteChatroomCommands()) return;
 
         if (args.length >= 2 && args[1].equalsIgnoreCase("help")) {
             showHistoryHelp(ctx);

@@ -44,22 +44,18 @@ public class Server {
         loadChatHistoryFromStorage();
     }
 
-    private void loadChatHistoryFromStorage() {
-        for (StoredMessage storedMessage : messageRepository.getStoredMessages()) {
-            ChatRoom chatRoom = chatRoomFactory.getRoomByName(storedMessage.getRoomName());
-            User sender = userRepository.findByUsername(storedMessage.getSenderUsername()).orElse(null);
-            if (chatRoom == null || sender == null) continue;
+    public void start() throws IOException {
+        ExecutorService pool = Executors.newFixedThreadPool(THREAD_POOL_SIZE);
 
-            Message message = new Message(storedMessage.getMessageId(),storedMessage.getContent(),sender,LocalDateTime.parse(storedMessage.getTimestamp()));
-            if (storedMessage.isDelivered()) message.markAsDelivered();
-
-            messageRepository.addLoadedMessage(message);
-            chatRoom.broadcastMessage(message);
+        try (ServerSocket serverSocket = new ServerSocket(PORT)){
+            System.out.println("Server is now listening.");
+            while (true) {
+                Socket clientSocket = serverSocket.accept();
+                pool.execute(new ClientHandler(clientSocket, this));
+            }
+        } finally {
+            pool.shutdown();
         }
-    }
-
-    private Message createAndStoreMessage (String content, ClientHandler sender) {
-        return new Message(messageRepository.getAllMessages().size() +1, content, sender.getUser(), LocalDateTime.now());
     }
 
     public void routeMessage(String content, ClientHandler sender) {
@@ -159,23 +155,9 @@ public class Server {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
         for (StoredMessage dm : pending) {
             LocalDateTime ts = LocalDateTime.parse(dm.getTimestamp());
-            handler.sendToClient(CYAN + "[" + ts.format(formatter) + "] [private from " + dm.getSenderUsername() + "] " + dm.getContent() + RESET);
+            handler.sendToClient(MAGENTA + "[" + ts.format(formatter) + "] [private from " + dm.getSenderUsername() + "] " + dm.getContent() + RESET);
         }
         messageRepository.markDMsAsDelivered(user.getUsername());
-    }
-
-    public void start() throws IOException {
-        ExecutorService pool = Executors.newFixedThreadPool(THREAD_POOL_SIZE);
-
-        try (ServerSocket serverSocket = new ServerSocket(PORT)){
-            System.out.println("Server is now listening.");
-            while (true) {
-                Socket clientSocket = serverSocket.accept();
-                pool.execute(new ClientHandler(clientSocket, this));
-            }
-        } finally {
-            pool.shutdown();
-        }
     }
 
     public FileTransfer getFileHandler() {
@@ -207,5 +189,23 @@ public class Server {
         return userRepository.findByUsername(username)
                 .filter(u -> u.getPasswordHash().equals(encryptPassword(password)))
                 .orElse(null);
+    }
+
+    private void loadChatHistoryFromStorage() {
+        for (StoredMessage storedMessage : messageRepository.getStoredMessages()) {
+            ChatRoom chatRoom = chatRoomFactory.getRoomByName(storedMessage.getRoomName());
+            User sender = userRepository.findByUsername(storedMessage.getSenderUsername()).orElse(null);
+            if (chatRoom == null || sender == null) continue;
+
+            Message message = new Message(storedMessage.getMessageId(),storedMessage.getContent(),sender,LocalDateTime.parse(storedMessage.getTimestamp()));
+            if (storedMessage.isDelivered()) message.markAsDelivered();
+
+            messageRepository.addLoadedMessage(message);
+            chatRoom.broadcastMessage(message);
+        }
+    }
+
+    private Message createAndStoreMessage (String content, ClientHandler sender) {
+        return new Message(messageRepository.getAllMessages().size() +1, content, sender.getUser(), LocalDateTime.now());
     }
 }

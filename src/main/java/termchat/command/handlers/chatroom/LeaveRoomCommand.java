@@ -5,10 +5,12 @@ import termchat.command.CommandHandler;
 import termchat.model.ChatRoom;
 import termchat.model.User;
 
+import static termchat.model.Ansi.*;
+
 public class LeaveRoomCommand implements CommandHandler {
     @Override
     public void handle(String[] args, CommandContext ctx) {
-        if (ctx.canExecuteChatroomCommands()) return;
+        if (ctx.cannotExecuteChatroomCommands()) return;
 
         User user = ctx.getUser();
         ChatRoom oldChat = user.getActiveChat();
@@ -23,6 +25,7 @@ public class LeaveRoomCommand implements CommandHandler {
                 oldChat, user.getUsername() + " has left the chatroom."
         );
 
-        ctx.send("You have left the chatroom.");
+        ctx.send(CYAN + "You have successfully left the " + BOLD + oldChat.getName() + RESET +
+                CYAN + " chatroom." + RESET);
     }
 }

@@ -5,6 +5,9 @@ import termchat.command.CommandHandler;
 import termchat.exceptions.UsernameTakenException;
 import termchat.model.User;
 
+import static termchat.model.Ansi.CYAN;
+import static termchat.model.Ansi.RESET;
+
 public class RegisterCommand implements CommandHandler {
     @Override
     public void handle(String[] args, CommandContext ctx) {
@@ -26,6 +29,6 @@ public class RegisterCommand implements CommandHandler {
         if (ctx.isAccountInvalid(newAccount,
                 "Account was created but automatic login failed.")) return;
 
-        ctx.loginOrRegister("Account registered and logged in as ", newAccount);
+        ctx.loginOrRegister(CYAN + "Account registered and logged in as " + RESET, newAccount);
     }
 }

@@ -1,13 +1,10 @@
 package termchat.persistence;
 
 public class StoredUser {
-    private String userId;
+    private final String userId;
     private String username;
     private String passwordHash;
     private String email;
-
-    public StoredUser() {
-    }
 
     public StoredUser(String userId, String username, String passwordHash, String email) {
         this.userId = userId;

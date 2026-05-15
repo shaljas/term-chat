@@ -38,18 +38,6 @@ public class JsonStorageService {
         }
     }
 
-    public <T> T load(String fileName, Class<T> type) {
-        Path filePath = dataDirectory.resolve(fileName);
-        if (!Files.exists(filePath)) return null;
-
-        try (FileReader reader = new FileReader(filePath.toFile())) {
-            return gson.fromJson(reader, type);
-        } catch (IOException | JsonSyntaxException e) {
-            System.out.println("Could not load " + fileName + ": " + e.getMessage());
-            return null;
-        }
-    }
-
     public <T> T load(String fileName, Type type) {
         Path filePath = dataDirectory.resolve(fileName);
         if (!Files.exists(filePath)) return null;

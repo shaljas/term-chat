@@ -7,6 +7,8 @@ import termchat.model.User;
 
 import java.util.Arrays;
 
+import static termchat.model.Ansi.*;
+
 public class CreateRoomCommand implements CommandHandler {
     @Override
     public void handle(String[] args, CommandContext ctx) {
@@ -19,11 +21,11 @@ public class CreateRoomCommand implements CommandHandler {
         String error = ctx.server().getRoomManager().createRoom(name, user);
 
         if (error == null) {
-            ctx.send("Chatroom created.");
+            ctx.send(CYAN + "Chatroom " + WHITE + name + CYAN + " has been successfully created." + RESET);
             ChatRoom chat = ctx.server().getRoomManager().getRoom(name, user);
             user.setActiveChat(chat);
             return;
         }
-        ctx.sendError("ERROR: " + error);
+        ctx.sendError("Error: " + error);
     }
 }

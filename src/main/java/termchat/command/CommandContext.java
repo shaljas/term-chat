@@ -42,7 +42,7 @@ public record CommandContext(ClientHandler clientHandler, Server server) {
         return false;
     }
 
-    public boolean canExecuteChatroomCommands() {
+    public boolean cannotExecuteChatroomCommands() {
         if (this.requireLoggedIn()) return true;
 
         if (this.getUser().getActiveChat() == null) {
@@ -90,6 +90,7 @@ public record CommandContext(ClientHandler clientHandler, Server server) {
         mainChat.addUser(account);
         account.setActiveChat(mainChat);
 
+        new termchat.command.HistoryCommands().history(new String[]{"/history","5"}, this);
         send(message + account.getUsername());
         server().deliverPendingDMs(account, clientHandler());
     }

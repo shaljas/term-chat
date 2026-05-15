@@ -20,16 +20,17 @@ public class RoomsCommand implements CommandHandler {
 
         if (chatrooms.isEmpty()) {
             ctx.sendError("You are not in any chatrooms.");
-        } else {
-            ctx.send("Chatrooms You are in:");
-            ChatRoom activeRoom = ctx.getUser().getActiveChat();
+            return;
+        }
 
-            for (ChatRoom chatroom : chatrooms) {
-                if (chatroom == activeRoom) {
-                    ctx.send(MAGENTA + chatroom.getName() + " (active)" + RESET);
-                } else {
-                    ctx.send(chatroom.getName());
-                }
+        ctx.send(CYAN + "You are in the following chatrooms:" + RESET);
+        ChatRoom activeRoom = ctx.getUser().getActiveChat();
+
+        for (ChatRoom chatroom : chatrooms) {
+            if (chatroom == activeRoom) {
+                ctx.send(WHITE + String.format("-  %-10s %s", chatroom.getName(), "(ACTIVE)") + RESET);
+            } else {
+                ctx.send(String.format("-  %-10s", chatroom.getName()));
             }
         }
     }

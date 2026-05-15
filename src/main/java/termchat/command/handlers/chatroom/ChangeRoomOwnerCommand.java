@@ -4,12 +4,14 @@ import termchat.command.CommandContext;
 import termchat.command.CommandHandler;
 import termchat.model.User;
 
+import static termchat.model.Ansi.*;
+
 public class ChangeRoomOwnerCommand implements CommandHandler {
     @Override
     public void handle(String[] args, CommandContext ctx) {
 
         if(ctx.requireArgCount(args, 2, ctx, "Usage: /changeowner <new owner's username>")) return;
-        if (ctx.canExecuteChatroomCommands()) return;
+        if (ctx.cannotExecuteChatroomCommands()) return;
 
         User user = ctx.getUser();
         String error = ctx.server().getRoomManager().changeOwner(user, args[1].trim());
@@ -19,6 +21,11 @@ public class ChangeRoomOwnerCommand implements CommandHandler {
             return;
         }
 
-        ctx.send("Successfully changed the owner.");
+        ctx.server().broadcastSystemMessage(
+                user.getActiveChat(),
+                args[1].trim() + " is the new owner of the " +
+                        BOLD + user.getActiveChat().getName() + RESET + YELLOW + " chatroom."
+        );
+        ctx.send(CYAN + "Successfully changed the owner." + RESET);
     }
 }

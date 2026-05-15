@@ -7,11 +7,13 @@ import termchat.model.User;
 
 import java.util.Arrays;
 
+import static termchat.model.Ansi.*;
+
 public class SwitchRoomCommand implements CommandHandler {
     @Override
     public void handle(String[] args, CommandContext ctx) {
 
-        if (ctx.requireArgCount(args, 2, ctx, "Usage: /switchroom <chatroom's name>")) return;
+        if (ctx.requireArgCount(args, 2, ctx, "Usage: " + args[0] + "<chatroom's name>")) return;
         if (ctx.requireLoggedIn()) return;
 
         User user = ctx.getUser();
@@ -26,6 +28,8 @@ public class SwitchRoomCommand implements CommandHandler {
         }
         user.setActiveChat(chatroom);
 
-        ctx.send("You have switched to the \"" + chatroom.getName() + "\" chatroom.");
+        new termchat.command.HistoryCommands().history(new String[]{"/history","5"}, ctx);
+
+        ctx.send(CYAN + "You have switched to the " + BOLD + chatroom.getName() + RESET + CYAN + " chatroom." + RESET);
     }
 }

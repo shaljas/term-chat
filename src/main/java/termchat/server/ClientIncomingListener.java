@@ -5,13 +5,13 @@ import termchat.client.ClientFileService;
 import java.io.DataInputStream;
 import java.io.IOException;
 
-public class ServerMessageListener extends Thread {
+public class ClientIncomingListener extends Thread {
     private final DataInputStream in;
     private boolean running = true;
     private static final int TYPE_MESSAGE = 1;
     private static final int TYPE_FILE = 2;
 
-    public ServerMessageListener(DataInputStream in) {
+    public ClientIncomingListener(DataInputStream in) {
         this.in = in;
     }
 

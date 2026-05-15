@@ -7,13 +7,12 @@ import termchat.model.User;
 
 import java.util.List;
 
-import static termchat.model.Ansi.MAGENTA;
-import static termchat.model.Ansi.RESET;
+import static termchat.model.Ansi.*;
 
 public class UsersCommand implements CommandHandler {
     @Override
     public void handle(String[] args, CommandContext ctx) {
-        if (ctx.canExecuteChatroomCommands()) return;
+        if (ctx.cannotExecuteChatroomCommands()) return;
 
         ChatRoom activeChat = ctx.getUser().getActiveChat();
 
@@ -23,13 +22,13 @@ public class UsersCommand implements CommandHandler {
             return;
         }
 
-        ctx.send("Users in " + activeChat.getName() + ":");
+        ctx.send(CYAN + "Users in " + BOLD + activeChat.getName() + RESET + CYAN + " are the following:" + RESET);
 
         for (User user : users) {
             if (ctx.server().getRoomManager().ownerCheck(user, activeChat)) {
-                ctx.send(MAGENTA + "– " + user.getUsername() + " (owner)" + RESET);
+                ctx.send(WHITE + String.format("-  %-10s %s", user.getUsername(), "(OWNER)") + RESET);
             } else {
-                ctx.send("– " + user.getUsername());
+                ctx.send(String.format("-  %-10s", user.getUsername()));
             }
         }
 
