@@ -1,5 +1,6 @@
 package termchat.server;
 import termchat.client.ClientHandler;
+import termchat.exceptions.UsernameTakenException;
 import termchat.model.ChatRoom;
 import termchat.model.Message;
 import termchat.model.User;
@@ -16,33 +17,36 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.stream.Collectors;
 
 import static termchat.model.Ansi.*;
 import static termchat.service.EncryptionService.encryptPassword;
 
 public class Server {
     private final List<ClientHandler> clientHandlers;
-    private final List<ChatRoom> chatRooms;
-    private final ChatRoomFactory crf;
-    private final FileTransfer filetransfer;
+    private final List<ChatRoom> chatrooms;
+    private final ChatRoomFactory chatRoomFactory;
+    private final FileTransfer fileTransfer;
 
     private final MessageRepository messageRepository;
     private final UserRepository userRepository;
 
+    private static final int PORT = 3000;
+    private static final int THREAD_POOL_SIZE = 6;
+    private static final String FILE_STORAGE_PATH = "Data/files";
+
     public Server() {
-        this.chatRooms = new ArrayList<>();
+        this.chatrooms = new ArrayList<>();
         this.clientHandlers = new ArrayList<>();
         this.messageRepository = new MessageRepository();
         this.userRepository = new UserRepository();
-        this.crf = new ChatRoomFactory(this.chatRooms, this.userRepository);
-        this.filetransfer = new FileTransfer(this, "Data/files");
+        this.chatRoomFactory = new ChatRoomFactory(this.chatrooms, this.userRepository);
+        this.fileTransfer = new FileTransfer(this, FILE_STORAGE_PATH);
         loadChatHistoryFromStorage();
     }
 
     private void loadChatHistoryFromStorage() {
         for (StoredMessage storedMessage : messageRepository.getStoredMessages()) {
-            ChatRoom chatRoom = crf.getRoomByName(storedMessage.getRoomName());
+            ChatRoom chatRoom = chatRoomFactory.getRoomByName(storedMessage.getRoomName());
             User sender = userRepository.findByUsername(storedMessage.getSenderUsername()).orElse(null);
             if (chatRoom == null || sender == null) continue;
 
@@ -144,7 +148,7 @@ public class Server {
             return null;
         }
 
-        receiverHandler.sendToClient(MAGENTA + "[private from " + sender.getUsername() + "] " + content + RESET);
+        receiverHandler.sendToClient(BOLD + "[private from " + sender.getUsername() + "] " + content + RESET);
         return null;
     }
 
@@ -155,15 +159,15 @@ public class Server {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
         for (StoredMessage dm : pending) {
             LocalDateTime ts = LocalDateTime.parse(dm.getTimestamp());
-            handler.sendToClient(MAGENTA + "[" + ts.format(formatter) + "] [private from " + dm.getSenderUsername() + "] " + dm.getContent() + RESET);
+            handler.sendToClient(CYAN + "[" + ts.format(formatter) + "] [private from " + dm.getSenderUsername() + "] " + dm.getContent() + RESET);
         }
         messageRepository.markDMsAsDelivered(user.getUsername());
     }
 
     public void start() throws IOException {
-        ExecutorService pool = Executors.newFixedThreadPool(6);
+        ExecutorService pool = Executors.newFixedThreadPool(THREAD_POOL_SIZE);
 
-        try (ServerSocket serverSocket = new ServerSocket(3000)){
+        try (ServerSocket serverSocket = new ServerSocket(PORT)){
             System.out.println("Server is now listening.");
             while (true) {
                 Socket clientSocket = serverSocket.accept();
@@ -174,12 +178,12 @@ public class Server {
         }
     }
 
-    public FileTransfer FileHandler() {
-        return filetransfer;
+    public FileTransfer getFileHandler() {
+        return fileTransfer;
     }
 
-    public ChatRoomFactory RoomManager() {
-        return crf;
+    public ChatRoomFactory getRoomManager() {
+        return chatRoomFactory;
     }
 
     public synchronized void addClientHandler (ClientHandler handler) {
@@ -190,22 +194,13 @@ public class Server {
         clientHandlers.remove(handler);
     }
 
-    public UserRepository getUserRepository() {
-        return userRepository;
-    }
-
-    public List<User> getOnlineUsers() {
-        return clientHandlers.stream().map(ClientHandler::getUser).filter(Objects::nonNull).collect(Collectors.toList());
-    }
-
-    public synchronized String registerUser(String username, String password, String email) {
+    public synchronized void registerUser(String username, String password, String email) {
         if (userRepository.usernameExists(username)) {
-            return "Username already taken";
+            throw new UsernameTakenException(username);
         }
 
         User newUser = new User(UUID.randomUUID().toString(), username, encryptPassword(password), email);
         userRepository.saveUser(newUser);
-        return null; // null = success
     }
 
     public synchronized User loginUser(String username, String password) {

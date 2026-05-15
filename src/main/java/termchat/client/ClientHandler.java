@@ -70,7 +70,7 @@ public class ClientHandler implements Runnable {
                     messageIn = in.readUTF();
                     handleMessage(messageIn);
                 } else if (type == 2) {
-                    server.FileHandler().receiveFile(user.getActiveChat(), user);
+                    server.getFileHandler().receiveFile(user.getActiveChat(), user);
                 }
             }
         } catch (IOException e) {

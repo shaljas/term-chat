@@ -17,9 +17,9 @@ public class ClientApp {
 
     public void start() {
         try (
-                Socket socket = new Socket(HOST, PORT);
-                DataOutputStream serverOut = new DataOutputStream(socket.getOutputStream());
-                DataInputStream serverIn = new DataInputStream(socket.getInputStream())
+            Socket socket = new Socket(HOST, PORT);
+            DataOutputStream serverOut = new DataOutputStream(socket.getOutputStream());
+            DataInputStream serverIn = new DataInputStream(socket.getInputStream())
         ){
             System.out.println("Client app started");
 
@@ -27,7 +27,7 @@ public class ClientApp {
             handleUserInput(serverOut, listener);
 
         } catch (IOException e) {
-            System.out.println("ClientApp start error: is the server running? " + e.getMessage());
+            System.out.println("ClientApp starting error: is the server running?\n\t - " + e.getMessage());
         }
     }
 
@@ -62,6 +62,7 @@ public class ClientApp {
     private boolean isUploadCommand(String input) {
         return "/upload".equalsIgnoreCase(input);
     }
+
     private boolean isQuitCommand(String input) {
         return "/quit".equalsIgnoreCase(input);
     }

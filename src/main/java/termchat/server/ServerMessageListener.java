@@ -8,6 +8,8 @@ import java.io.IOException;
 public class ServerMessageListener extends Thread {
     private final DataInputStream in;
     private boolean running = true;
+    private static final int TYPE_MESSAGE = 1;
+    private static final int TYPE_FILE = 2;
 
     public ServerMessageListener(DataInputStream in) {
         this.in = in;
@@ -19,10 +21,10 @@ public class ServerMessageListener extends Thread {
             String message;
             while (running) {
                 int type = in.readInt();
-                if (type == 1) {
+                if (type == TYPE_MESSAGE) {
                     message = in.readUTF();
                     System.out.println(message);
-                } else if (type == 2) {
+                } else if (type == TYPE_FILE) {
                     String result = ClientFileService.handleDownload(in);
                     System.out.println(result);
                 }

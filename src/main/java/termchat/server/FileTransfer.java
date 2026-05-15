@@ -29,7 +29,7 @@ public class FileTransfer {
 
         ClientHandler client = user.getClientHandler();
 
-        if (!server.RoomManager().memberCheck(user, room)) {
+        if (!server.getRoomManager().memberCheck(user, room)) {
             client.sendToClient("You are not in this chatroom."); // denied
             return;
         }
@@ -67,7 +67,7 @@ public class FileTransfer {
 
         DataOutputStream out = user.getClientHandler().getOut();
         out.writeInt(2); // file type input
-        if (!server.RoomManager().memberCheck(user, room)) {
+        if (!server.getRoomManager().memberCheck(user, room)) {
             out.writeInt(AUTH_DENIED);
             return;
         }
