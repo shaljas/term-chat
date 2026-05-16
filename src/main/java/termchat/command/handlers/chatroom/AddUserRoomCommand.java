@@ -14,14 +14,14 @@ public class AddUserRoomCommand implements CommandHandler {
         if (ctx.cannotExecuteChatroomCommands()) return;
 
         User user = ctx.getUser();
-        String error = ctx.server().getRoomManager().addUser(user, args[1].trim());
+        String error = ctx.chatRoomFactory().addUser(user, args[1].trim());
 
         if (error != null) {
             ctx.sendError("Error: " + error);
             return;
         }
 
-        ctx.server().broadcastSystemMessage(
+        ctx.messageRouter().broadcastSystemMessage(
                 user.getActiveChat(),
                 args[1].trim() + " was added to the " +
                         BOLD + user.getActiveChat().getName() + RESET + YELLOW + " chatroom."

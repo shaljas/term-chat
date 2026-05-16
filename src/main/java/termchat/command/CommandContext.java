@@ -1,30 +1,39 @@
 package termchat.command;
 
 import termchat.client.ClientHandler;
+import termchat.client.OutputChannel;
 import termchat.model.ChatRoom;
 import termchat.model.User;
-import termchat.server.Server;
+import termchat.server.ChatRoomFactory;
+import termchat.server.FileTransfer;
+import termchat.server.MessageRouter;
+import termchat.service.AuthService;
 
 import java.io.IOException;
 
 import static termchat.model.Ansi.*;
 
-public record CommandContext(ClientHandler clientHandler, Server server) {
+public record CommandContext(
+        OutputChannel outputChannel,
+        AuthService authService,
+        ChatRoomFactory chatRoomFactory,
+        MessageRouter messageRouter,
+        FileTransfer fileTransfer) {
 
     public User getUser() {
-        return clientHandler.getUser();
+        return outputChannel.getUser();
     }
 
     public void setUser(User user) {
-        clientHandler.setUser(user);
+        outputChannel.setUser(user);
     }
 
     public void send(String message) {
-        clientHandler.sendToClient(message);
+        outputChannel.sendToClient(message);
     }
 
     public void sendError(String message) {
-        clientHandler.sendToClient(RED + message + RESET);
+        outputChannel.sendToClient(RED + message + RESET);
     }
 
     public boolean requireLoggedOut() {
@@ -62,13 +71,6 @@ public record CommandContext(ClientHandler clientHandler, Server server) {
         return false;
     }
 
-    public User loginAndGetAccount(String[] args) {
-        String username = args[1];
-        String password = args[2];
-
-        return server().loginUser(username, password);
-    }
-
     public boolean isAccountInvalid(User account, String errorMessage) {
         if (account == null) {
             sendError("Error: " + errorMessage);
@@ -87,34 +89,28 @@ public record CommandContext(ClientHandler clientHandler, Server server) {
         setUser(account);
         account.setOnline(true);
 
-        ChatRoom mainChat = server().getRoomManager().getMainChat();
+        ChatRoom mainChat = chatRoomFactory.getMainChat();
         mainChat.addUser(account);
         account.setActiveChat(mainChat);
 
         new termchat.command.HistoryCommands().history(new String[]{"/history","5"}, this);
         send(message + account.getUsername());
-        server().deliverPendingDMs(account, clientHandler());
+        messageRouter().deliverPendingDMs(account, outputChannel);
     }
 
     public boolean getUserConfirmation(String confirmQuestion, String confirmText) {
         send(CYAN + confirmQuestion + RESET);
 
         try {
-            int type = clientHandler.getIn().readInt();
-
-            if (type == 1) {
-                String messageIn = clientHandler.getIn().readUTF();
-                return messageIn.equalsIgnoreCase(confirmText);
-            }
+            String messageIn = outputChannel.readStringInput();
+            return messageIn.equalsIgnoreCase(confirmText);
         } catch (IOException e) {
             sendError("Error: unable to read confirmation. Try again.");
             return false;
         }
-
-        return false;
     }
 
     public void stop() {
-        clientHandler.stop();
+        outputChannel.stop();
     }
 }

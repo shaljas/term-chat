@@ -18,11 +18,11 @@ public class CreateRoomCommand implements CommandHandler {
 
         User user = ctx.getUser();
         String name = String.join(" ", Arrays.copyOfRange(args, 1, args.length)).trim();
-        String error = ctx.server().getRoomManager().createRoom(name, user);
+        String error = ctx.chatRoomFactory().createRoom(name, user);
 
         if (error == null) {
             ctx.send(CYAN + "Chatroom " + WHITE + name + CYAN + " has been successfully created." + RESET);
-            ChatRoom chat = ctx.server().getRoomManager().getRoom(name, user);
+            ChatRoom chat = ctx.chatRoomFactory().getRoom(name, user);
             user.setActiveChat(chat);
             return;
         }

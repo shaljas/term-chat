@@ -12,24 +12,23 @@ import java.nio.file.Paths;
 public class FileTransfer {
 
     private final Path fileStorage;
-    private final Server server;
+    private final ChatRoomFactory chatRoomFactory;
 
     // response codes
     static final int OK = 0;
     static final int ERROR = -1;
     static final int AUTH_DENIED = -2;
 
-    public FileTransfer(Server server, String fileStorage) {
-        this.server = server;
+    public FileTransfer(String fileStorage, ChatRoomFactory chatRoomFactory) {
         this.fileStorage = Paths.get(fileStorage);
-
+        this.chatRoomFactory = chatRoomFactory;
     }
 
     public void receiveFile(ChatRoom room, User user) throws IOException {
 
         ClientHandler client = user.getClientHandler();
 
-        if (!server.getRoomManager().memberCheck(user, room)) {
+        if (!chatRoomFactory.memberCheck(user, room)) {
             client.sendToClient("You are not in this chatroom."); // denied
             return;
         }
@@ -67,7 +66,7 @@ public class FileTransfer {
 
         DataOutputStream out = user.getClientHandler().getOut();
         out.writeInt(2); // file type input
-        if (!server.getRoomManager().memberCheck(user, room)) {
+        if (!chatRoomFactory.memberCheck(user, room)) {
             out.writeInt(AUTH_DENIED);
             return;
         }

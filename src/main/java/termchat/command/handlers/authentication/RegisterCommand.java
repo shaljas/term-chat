@@ -15,16 +15,19 @@ public class RegisterCommand implements CommandHandler {
         if (ctx.requireArgCount(args, 4, ctx, "Usage: /register <username> <password> <email>")) return;
 
         try {
-            ctx.server().registerUser(args[1], args[2], args[3]);
+            ctx.authService().registerUser(args[1], args[2], args[3]);
         } catch (UsernameTakenException e) {
-            ctx.sendError("Error: username already taken");
+            ctx.sendError(e.getMessage());
             return;
         } catch (Exception e) {
             ctx.sendError("Error: registration failed");
             return;
         }
 
-        User newAccount = ctx.loginAndGetAccount(args);
+        String username = args[1];
+        String password = args[2];
+
+        User newAccount = ctx.authService().loginUser(username, password);
 
         if (ctx.isAccountInvalid(newAccount,
                 "Account was created but automatic login failed.")) return;

@@ -14,17 +14,16 @@ import java.util.HashMap;
 import java.util.List;
 
 public class ChatRoomFactory {
-
-    private final List<ChatRoom> serverChatRoomList;
-    private final UserRepository users;
-    private final HashMap<String, User> roomOwners = new HashMap<>();
-    private final HashMap<String, ChatRoom> roomNames = new HashMap<>();
-    private final ChatRoom mainChat;
-    private final JsonStorageService storageService = new JsonStorageService();
     private static final String CHATROOMS_FILE = "chatrooms.json";
 
-    public ChatRoomFactory(List<ChatRoom> chatroomList, UserRepository users) {
-        this.serverChatRoomList = chatroomList;
+    private final ChatRoom mainChat;
+    private final UserRepository users;
+    private final List<ChatRoom> serverChatRoomList = new ArrayList<>();
+    private final HashMap<String, User> roomOwners = new HashMap<>();
+    private final HashMap<String, ChatRoom> roomNames = new HashMap<>();
+    private final JsonStorageService storageService = new JsonStorageService();
+
+    public ChatRoomFactory(UserRepository users) {
         this.users = users;
         this.mainChat = new MainChatRoom();
         this.serverChatRoomList.add(mainChat);
@@ -93,8 +92,6 @@ public class ChatRoomFactory {
         return roomNames.containsKey(chatname);
     }
 
-    // creates a new chatroom and automatically makes creator the owner
-    // return null if success, error message if not
     public String createRoom(String chatname, User user) {
 
         try {
@@ -139,7 +136,6 @@ public class ChatRoomFactory {
         return null;
     }
 
-    // only return chatroom if user is in it
     public ChatRoom getRoom(String chatname, User user) {
         if (!doesChatRoomExist(chatname)) {
             return null;
@@ -299,13 +295,11 @@ public class ChatRoomFactory {
         return null;
     }
 
-    // check if user is the current owner of chatroom
     public boolean ownerCheck(User user, ChatRoom chatroom) {
         if (chatroom.getClass() == MainChatRoom.class) return false;
         return (user == roomOwners.get(chatroom.getName()));
     }
 
-    // check if user is in the chatroom
     public boolean memberCheck(User user, ChatRoom chatroom) {
         return (chatroom.getMembers().contains(user));
     }

@@ -21,7 +21,7 @@ public class DeleteRoomCommand implements CommandHandler {
         ) return;
 
 
-        String error = ctx.server().getRoomManager().deleteRoom(user.getActiveChat().getName(), user);
+        String error = ctx.chatRoomFactory().deleteRoom(user.getActiveChat().getName(), user);
 
         if (error != null) {
             ctx.sendError("Error: " + error);

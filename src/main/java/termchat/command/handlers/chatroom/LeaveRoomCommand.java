@@ -14,14 +14,14 @@ public class LeaveRoomCommand implements CommandHandler {
 
         User user = ctx.getUser();
         ChatRoom oldChat = user.getActiveChat();
-        String error = ctx.server().getRoomManager().leaveRoom(user);
+        String error = ctx.chatRoomFactory().leaveRoom(user);
 
         if (error != null) {
             ctx.sendError("Error: " + error);
             return;
         }
 
-        ctx.server().broadcastSystemMessage(
+        ctx.messageRouter().broadcastSystemMessage(
                 oldChat, user.getUsername() + " has left the chatroom."
         );
 

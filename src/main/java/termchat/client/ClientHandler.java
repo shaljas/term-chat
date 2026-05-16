@@ -3,17 +3,23 @@ package termchat.client;
 import termchat.model.User;
 import termchat.command.CommandContext;
 import termchat.command.CommandRegistry;
-import termchat.server.Server;
+import termchat.server.*;
+import termchat.service.AuthService;
 
 import java.io.*;
 import java.net.Socket;
 import java.util.HashSet;
 import java.util.Set;
 
-public class ClientHandler implements Runnable {
-    private final Server server;
+public class ClientHandler implements Runnable, OutputChannel {
     private final Socket socket;
     private User user;
+
+    private final SessionManager sessionManager;
+    private final FileTransfer fileTransfer;
+    private final AuthService authService;
+    private final ChatRoomFactory chatRoomFactory;
+    private final MessageRouter messageRouter;
 
     private DataInputStream in;
     private DataOutputStream out;
@@ -22,11 +28,16 @@ public class ClientHandler implements Runnable {
     private final CommandRegistry commandRegistry = new CommandRegistry();
     private final Set<String> notifiedOfflineRecipients = new HashSet<>();
 
-    public ClientHandler(Socket socket, Server server) {
+    public ClientHandler(Socket socket, SessionManager sessionManager, FileTransfer fileTransfer, AuthService authService, ChatRoomFactory chatRoomFactory, MessageRouter messageRouter) {
         this.socket = socket;
-        this.server = server;
+        this.sessionManager = sessionManager;
+        this.fileTransfer = fileTransfer;
+        this.authService = authService;
+        this.chatRoomFactory = chatRoomFactory;
+        this.messageRouter = messageRouter;
     }
 
+    @Override
     public User getUser() {
         return user;
     }
@@ -39,6 +50,7 @@ public class ClientHandler implements Runnable {
         return out;
     }
 
+    @Override
     public void setUser(User user) {
         if (this.user != null) {
             this.user.setClientHandler(null);
@@ -53,6 +65,7 @@ public class ClientHandler implements Runnable {
         return notifiedOfflineRecipients.add(username);
     }
 
+    @Override
     public void sendToClient(String message) {
         try {
             if (out != null) {
@@ -65,6 +78,7 @@ public class ClientHandler implements Runnable {
         }
     }
 
+    @Override
     public void stop() {
         running = false;
 
@@ -77,8 +91,14 @@ public class ClientHandler implements Runnable {
         }
     }
 
+    @Override
+    public String readStringInput() throws IOException{
+        in.readInt();
+        return in.readUTF();
+    }
+
     private void handleMessage(String message) {
-        CommandContext ctx = new CommandContext(this, server);
+        CommandContext ctx = new CommandContext(this, authService, chatRoomFactory, messageRouter, fileTransfer);
         commandRegistry.execute(message, ctx);
     }
 
@@ -100,7 +120,7 @@ public class ClientHandler implements Runnable {
                     messageIn = in.readUTF();
                     handleMessage(messageIn);
                 } else if (type == 2) {
-                    server.getFileHandler().receiveFile(user.getActiveChat(), user);
+                    fileTransfer.receiveFile(user.getActiveChat(), user);
                 }
             }
         } catch (IOException e) {
@@ -129,11 +149,11 @@ public class ClientHandler implements Runnable {
         System.out.println(Thread.currentThread().getName() + " started.");
         try {
             setupStreams();
-            server.addClientHandler(this);
+            sessionManager.addClient(this);
             listenLoop();
 
         } finally {
-            server.removeClientHandler(this);
+            sessionManager.removeClient(this);
             cleanup();
             System.out.println(Thread.currentThread().getName() + " finished.");
         }

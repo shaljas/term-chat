@@ -16,7 +16,7 @@ public class RoomsCommand implements CommandHandler {
         if (ctx.requireLoggedIn()) return;
         User user = ctx.getUser();
 
-        List<ChatRoom> chatrooms = ctx.server().getRoomManager().getUserChatRooms(user);
+        List<ChatRoom> chatrooms = ctx.chatRoomFactory().getUserChatRooms(user);
 
         if (chatrooms.isEmpty()) {
             ctx.sendError("You are not in any chatrooms.");

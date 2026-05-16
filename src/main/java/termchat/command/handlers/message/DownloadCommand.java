@@ -18,7 +18,7 @@ public class DownloadCommand implements CommandHandler {
         String filename = args[1];
 
         try {
-            ctx.server().getFileHandler().sendFile(room, user, filename);
+            ctx.fileTransfer().sendFile(room, user, filename);
         } catch (IOException e) {
             ctx.sendError("An unhandled exception has occurred.");
         }

@@ -20,14 +20,14 @@ public class ChangeRoomOwnerCommand implements CommandHandler {
                 user.getUsername())
         ) return;
 
-        String error = ctx.server().getRoomManager().changeOwner(user, args[1].trim());
+        String error = ctx.chatRoomFactory().changeOwner(user, args[1].trim());
 
         if (error != null) {
             ctx.sendError("Error: " + error);
             return;
         }
 
-        ctx.server().broadcastSystemMessage(
+        ctx.messageRouter().broadcastSystemMessage(
                 user.getActiveChat(),
                 args[1].trim() + " is the new owner of the " +
                         BOLD + user.getActiveChat().getName() + RESET + YELLOW + " chatroom."

@@ -30,7 +30,7 @@ public class CommandRegistry {
             if (c.getUser() == null || input.startsWith("/")) {
                 c.sendError("Unknown command. Type /help");
             } else {
-                c.server().routeMessage(input.trim(), c.clientHandler());
+                c.messageRouter().routeMessage(input.trim(), c.outputChannel());
             }
         }).handle(args, ctx);
     }

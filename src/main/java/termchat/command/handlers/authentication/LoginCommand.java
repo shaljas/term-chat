@@ -13,7 +13,10 @@ public class LoginCommand implements CommandHandler {
         if (ctx.requireLoggedOut()) return;
         if (ctx.requireArgCount(args, 3, ctx, "Usage: login <username> <password>")) return;
 
-        User account = ctx.loginAndGetAccount(args);
+        String username = args[1];
+        String password = args[2];
+
+        User account = ctx.authService().loginUser(username, password);
         if (ctx.isAccountInvalid(account, "Invalid username or password.")) return;
 
         ctx.loginOrRegister(CYAN + "Login successful! Welcome " + RESET, account);

@@ -25,7 +25,7 @@ public class UsersCommand implements CommandHandler {
         ctx.send(CYAN + "Users in " + BOLD + activeChat.getName() + RESET + CYAN + " are the following:" + RESET);
 
         for (User user : users) {
-            if (ctx.server().getRoomManager().ownerCheck(user, activeChat)) {
+            if (ctx.chatRoomFactory().ownerCheck(user, activeChat)) {
                 ctx.send(WHITE + String.format("-  %-10s %s", user.getUsername(), "(OWNER)") + RESET);
             } else {
                 ctx.send(String.format("-  %-10s", user.getUsername()));

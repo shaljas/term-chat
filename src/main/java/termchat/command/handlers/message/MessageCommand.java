@@ -19,7 +19,7 @@ public class MessageCommand implements CommandHandler {
         String receiverUsername = args[1];
         String content = String.join(" ", Arrays.copyOfRange(args, 2, args.length)).trim();
 
-        String error = ctx.server().sendPrivateMessage(ctx.getUser(), receiverUsername, content);
+        String error = ctx.messageRouter().sendPrivateMessage(ctx.getUser(), receiverUsername, content);
 
         if (error != null) {
             ctx.sendError("Error: " + error);

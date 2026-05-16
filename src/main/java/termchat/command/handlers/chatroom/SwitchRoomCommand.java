@@ -19,8 +19,8 @@ public class SwitchRoomCommand implements CommandHandler {
         User user = ctx.getUser();
         String name = String.join(" ", Arrays.copyOfRange(args, 1, args.length));
 
-        ChatRoom chatroom = ctx.server().getRoomManager().getRoom(name, user);
-        ctx.server().getRoomManager().getMainChat().addUser(user);
+        ChatRoom chatroom = ctx.chatRoomFactory().getRoom(name, user);
+        ctx.chatRoomFactory().getMainChat().addUser(user);
 
         if (chatroom == null) {
             ctx.sendError("Chatroom does not exist or you have not been added to it.");

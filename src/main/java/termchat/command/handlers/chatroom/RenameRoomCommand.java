@@ -19,14 +19,14 @@ public class RenameRoomCommand implements CommandHandler {
 
         String name = String.join(" ", Arrays.copyOfRange(args, 1, args.length)).trim();
         String oldName = user.getActiveChat().getName();
-        String error = ctx.server().getRoomManager().renameRoom(name, user);
+        String error = ctx.chatRoomFactory().renameRoom(name, user);
 
         if (error != null) {
             ctx.sendError("Error: " + error);
             return;
         }
 
-        ctx.server().broadcastSystemMessage(
+        ctx.messageRouter().broadcastSystemMessage(
                 user.getActiveChat(), "Chatroom " + BOLD + oldName + RESET + YELLOW +
                         " was renamed to " + BOLD + name + RESET + YELLOW + "."
         );
