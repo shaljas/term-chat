@@ -5,8 +5,9 @@ import termchat.model.ChatRoom;
 import termchat.model.User;
 import termchat.server.Server;
 
-import static termchat.model.Ansi.RED;
-import static termchat.model.Ansi.RESET;
+import java.io.IOException;
+
+import static termchat.model.Ansi.*;
 
 public record CommandContext(ClientHandler clientHandler, Server server) {
 
@@ -93,6 +94,24 @@ public record CommandContext(ClientHandler clientHandler, Server server) {
         new termchat.command.HistoryCommands().history(new String[]{"/history","5"}, this);
         send(message + account.getUsername());
         server().deliverPendingDMs(account, clientHandler());
+    }
+
+    public boolean getUserConfirmation(String confirmQuestion, String confirmText) {
+        send(CYAN + confirmQuestion + RESET);
+
+        try {
+            int type = clientHandler.getIn().readInt();
+
+            if (type == 1) {
+                String messageIn = clientHandler.getIn().readUTF();
+                return messageIn.equalsIgnoreCase(confirmText);
+            }
+        } catch (IOException e) {
+            sendError("Error: unable to read confirmation. Try again.");
+            return false;
+        }
+
+        return false;
     }
 
     public void stop() {

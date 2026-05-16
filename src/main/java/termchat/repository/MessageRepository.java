@@ -24,7 +24,52 @@ public class MessageRepository {
         loadMessagesFromStorage();
     }
 
-    // Server saab sõnumi kätte ja salvestab selle meetodi abil Message isendi
+    public List<Message> getAllMessages() {
+        return new ArrayList<>(messages);
+    }
+
+    public List<StoredMessage> getStoredMessages() {
+        return new ArrayList<>(storedMessages);
+    }
+
+    public List<StoredMessage> getUndeliveredDMs(String username) {
+        return storedMessages.stream()
+                .filter(m -> m.getRoomName().equals("dm:" + username) && !m.isDelivered())
+                .collect(Collectors.toList());
+    }
+
+    public void addLoadedMessage(Message message) {
+        messages.add(message);
+    }
+
+    public void loadMessagesFromStorage() {
+        Type messageListType = new TypeToken<List<StoredMessage>>() {}.getType();
+        List<StoredMessage> loadedMessages = storageService.load(MESSAGES_FILE, messageListType);
+        if (loadedMessages == null) return;
+        storedMessages.addAll(loadedMessages);
+    }
+
+    public void markDMsAsDelivered(String username) {
+        storedMessages.stream()
+                .filter(m -> m.getRoomName().equals("dm:" + username) && !m.isDelivered())
+                .forEach(m -> m.setDelivered(true));
+        saveMessagesToStorage();
+    }
+
+    public void saveDM(Message message, String receiverUsername) {
+        messages.add(message);
+        StoredMessage storedMessage = new StoredMessage(
+                message.getMessageId(),
+                "dm:" + receiverUsername,
+                message.getSender().getUsername(),
+                message.getContent(),
+                message.getTimestamp().toString(),
+                false
+        );
+        storedMessages.add(storedMessage);
+        saveMessagesToStorage();
+    }
+
     public void saveMessage(Message message, ChatRoom chatRoom) {
         messages.add(message);
 
@@ -43,52 +88,5 @@ public class MessageRepository {
 
     private void saveMessagesToStorage() {
         storageService.save(MESSAGES_FILE, storedMessages);
-    }
-
-    public void loadMessagesFromStorage() {
-        Type messageListType = new TypeToken<List<StoredMessage>>() {}.getType();
-        List<StoredMessage> loadedMessages = storageService.load(MESSAGES_FILE, messageListType);
-        if (loadedMessages == null) return;
-        storedMessages.addAll(loadedMessages);
-    }
-
-    // Selle meetodiga saaks tulevikus kuvada ajalugu ala, et teeme chat history
-    public List<Message> getAllMessages() {
-        return new ArrayList<>(messages);
-    }
-
-    public List<StoredMessage> getStoredMessages() {
-        return new ArrayList<>(storedMessages);
-    }
-
-    public void addLoadedMessage(Message message) {
-        messages.add(message);
-    }
-
-    public void saveDM(Message message, String receiverUsername) {
-        messages.add(message);
-        StoredMessage storedMessage = new StoredMessage(
-                message.getMessageId(),
-                "dm:" + receiverUsername,
-                message.getSender().getUsername(),
-                message.getContent(),
-                message.getTimestamp().toString(),
-                false
-        );
-        storedMessages.add(storedMessage);
-        saveMessagesToStorage();
-    }
-
-    public List<StoredMessage> getUndeliveredDMs(String username) {
-        return storedMessages.stream()
-                .filter(m -> m.getRoomName().equals("dm:" + username) && !m.isDelivered())
-                .collect(Collectors.toList());
-    }
-
-    public void markDMsAsDelivered(String username) {
-        storedMessages.stream()
-                .filter(m -> m.getRoomName().equals("dm:" + username) && !m.isDelivered())
-                .forEach(m -> m.setDelivered(true));
-        saveMessagesToStorage();
     }
 }

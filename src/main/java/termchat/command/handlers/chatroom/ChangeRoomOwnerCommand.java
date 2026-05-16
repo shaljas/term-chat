@@ -14,6 +14,12 @@ public class ChangeRoomOwnerCommand implements CommandHandler {
         if (ctx.cannotExecuteChatroomCommands()) return;
 
         User user = ctx.getUser();
+
+        if (!ctx.getUserConfirmation("Confirm owner transfer by typing your \""
+                        + BOLD + user.getUsername() + RESET + CYAN + "\" username:",
+                user.getUsername())
+        ) return;
+
         String error = ctx.server().getRoomManager().changeOwner(user, args[1].trim());
 
         if (error != null) {

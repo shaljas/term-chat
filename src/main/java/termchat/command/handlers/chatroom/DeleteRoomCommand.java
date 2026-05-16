@@ -4,14 +4,22 @@ import termchat.command.CommandContext;
 import termchat.command.CommandHandler;
 import termchat.model.User;
 
-import static termchat.model.Ansi.CYAN;
-import static termchat.model.Ansi.RESET;
+import java.io.IOException;
+
+import static termchat.model.Ansi.*;
 
 public class DeleteRoomCommand implements CommandHandler {
     @Override
     public void handle(String[] args, CommandContext ctx) {
         if (ctx.cannotExecuteChatroomCommands()) return;
         User user = ctx.getUser();
+
+
+        if (!ctx.getUserConfirmation("Confirm room deletion by typing room \""
+                + BOLD + user.getActiveChat().getName() + RESET + CYAN + "\" name:",
+                user.getActiveChat().getName())
+        ) return;
+
 
         String error = ctx.server().getRoomManager().deleteRoom(user.getActiveChat().getName(), user);
 

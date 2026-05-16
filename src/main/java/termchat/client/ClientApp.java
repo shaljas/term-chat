@@ -1,7 +1,5 @@
 package termchat.client;
 
-import termchat.server.ClientIncomingListener;
-
 import java.io.*;
 import java.net.Socket;
 import java.util.Scanner;

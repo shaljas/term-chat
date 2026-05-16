@@ -1,6 +1,4 @@
-package termchat.server;
-
-import termchat.client.ClientFileService;
+package termchat.client;
 
 import java.io.DataInputStream;
 import java.io.IOException;

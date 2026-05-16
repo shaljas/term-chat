@@ -31,22 +31,26 @@ public class ClientHandler implements Runnable {
         return user;
     }
 
+    public DataInputStream getIn() {
+        return in;
+    }
+
+    public DataOutputStream getOut() {
+        return out;
+    }
+
     public void setUser(User user) {
         if (this.user != null) {
-            this.user.setClientHandler(null);  // delete the old reference as well, otherwise messages still go through
+            this.user.setClientHandler(null);
         }
         this.user = user;
         if (user != null) {
             user.setClientHandler(this);
         }
     }
-    private void setupStreams() {
-        try {
-            in = new DataInputStream(socket.getInputStream());
-            out = new DataOutputStream(socket.getOutputStream());
-        } catch (IOException e) {
-            System.out.println("ClientHandler stream setup error: " + e.getMessage());
-        }
+
+    public boolean shouldNotifyOffline(String username) {
+        return notifiedOfflineRecipients.add(username);
     }
 
     public void sendToClient(String message) {
@@ -58,6 +62,32 @@ public class ClientHandler implements Runnable {
             }
         } catch (IOException e) {
             System.out.println("Error" + e.getMessage());
+        }
+    }
+
+    public void stop() {
+        running = false;
+
+        try {
+            if (socket != null && !socket.isClosed()) {
+                socket.close();
+            }
+        } catch (IOException e) {
+            System.out.println("Error while stopping client: " + e.getMessage());
+        }
+    }
+
+    private void handleMessage(String message) {
+        CommandContext ctx = new CommandContext(this, server);
+        commandRegistry.execute(message, ctx);
+    }
+
+    private void setupStreams() {
+        try {
+            in = new DataInputStream(socket.getInputStream());
+            out = new DataOutputStream(socket.getOutputStream());
+        } catch (IOException e) {
+            System.out.println("ClientHandler stream setup error: " + e.getMessage());
         }
     }
 
@@ -75,23 +105,6 @@ public class ClientHandler implements Runnable {
             }
         } catch (IOException e) {
             System.out.println("ClientHandler loop incoming message readline error: " + e.getMessage());
-        }
-    }
-
-    private void handleMessage(String message) {
-        CommandContext ctx = new CommandContext(this, server);
-        commandRegistry.execute(message, ctx);
-    }
-
-    public void stop() {
-        running = false;
-
-        try {
-            if (socket != null && !socket.isClosed()) {
-                socket.close();
-            }
-        } catch (IOException e) {
-            System.out.println("Error while stopping client: " + e.getMessage());
         }
     }
 
@@ -124,17 +137,5 @@ public class ClientHandler implements Runnable {
             cleanup();
             System.out.println(Thread.currentThread().getName() + " finished.");
         }
-    }
-
-    public DataInputStream getIn() {
-        return in;
-    }
-
-    public DataOutputStream getOut() {
-        return out;
-    }
-
-    public boolean shouldNotifyOffline(String username) {
-        return notifiedOfflineRecipients.add(username);
     }
 }
