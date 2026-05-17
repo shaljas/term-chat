@@ -3,7 +3,7 @@ package termchat.model;
 import termchat.client.ClientHandler;
 
 public class User {
-    private String userId;
+    private final String userId;
     private String username;
     private String passwordHash;
     private ChatRoom activeChat = null;

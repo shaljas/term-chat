@@ -1,10 +1,10 @@
 package termchat.client;
 
-import termchat.server.ServerMessageListener;
-
 import java.io.*;
 import java.net.Socket;
 import java.util.Scanner;
+
+import static termchat.model.Ansi.*;
 
 public class ClientApp {
     private static final String HOST = "localhost";
@@ -17,27 +17,27 @@ public class ClientApp {
 
     public void start() {
         try (
-                Socket socket = new Socket(HOST, PORT);
-                DataOutputStream serverOut = new DataOutputStream(socket.getOutputStream());
-                DataInputStream serverIn = new DataInputStream(socket.getInputStream())
+            Socket socket = new Socket(HOST, PORT);
+            DataOutputStream serverOut = new DataOutputStream(socket.getOutputStream());
+            DataInputStream serverIn = new DataInputStream(socket.getInputStream())
         ){
-            System.out.println("Client app started");
+            System.out.println(YELLOW + "Client application started up successfully. Type /quit to exit.\n" + RESET);
 
-            ServerMessageListener listener = startListener(serverIn, serverOut);
+            ClientIncomingListener listener = startListener(serverIn);
             handleUserInput(serverOut, listener);
 
         } catch (IOException e) {
-            System.out.println("ClientApp start error: is the server running? " + e.getMessage());
+            System.out.println(RED + "Client application failed during startup - is the central server running?\n\t - " + e.getMessage() + RESET);
         }
     }
 
-    private ServerMessageListener startListener(DataInputStream serverIn, DataOutputStream serverOut) {
-        ServerMessageListener listener = new ServerMessageListener(serverIn);
+    private ClientIncomingListener startListener(DataInputStream serverIn) {
+        ClientIncomingListener listener = new ClientIncomingListener(serverIn);
         listener.start();
         return listener;
     }
 
-    private void handleUserInput(DataOutputStream serverOut, ServerMessageListener listener) throws IOException {
+    private void handleUserInput(DataOutputStream serverOut, ClientIncomingListener listener) throws IOException {
         Scanner userInput = new Scanner(System.in);
 
         while (userInput.hasNextLine()) {
@@ -62,11 +62,12 @@ public class ClientApp {
     private boolean isUploadCommand(String input) {
         return "/upload".equalsIgnoreCase(input);
     }
+
     private boolean isQuitCommand(String input) {
         return "/quit".equalsIgnoreCase(input);
     }
 
-    private void waitForListener(ServerMessageListener listener) {
+    private void waitForListener(ClientIncomingListener listener) {
         try {
             listener.join();
         } catch (InterruptedException e) {

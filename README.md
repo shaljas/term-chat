@@ -4,21 +4,17 @@ A terminal-based chat with unlimited potential
 ## Program functions
 
 Core
-- send and edit text-based messages
+- send text-based messages
 - attach and send files
-- create and join chat rooms
+- create and join chatrooms
 - send private one-to-one messages
 - chat history and accounts are stored and managed by a central server
-- search chat history by message content and date
+- search chat history by message content
 - offline users receive an email notification when they get a new message
 
 Expandability
 - support for encypted messaging
 - desktop notifications
-
-## Class diagram
-
-![Picture of class diagram](/Attachments/diagram2.drawio.png)
 
 ## Group agreements
 - "main" branch is only for clean and ready code, otherwise use "dev" branch
@@ -47,8 +43,8 @@ II stage: 26. Aprill
 
 III stage: 17. May 2026
 - chat history
-- send files*
-- search by content and date
+- send files
+- search by content
 - email notification to offline users
 - clean and refactored code
 - updated diagram and ReadME

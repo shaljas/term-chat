@@ -3,17 +3,23 @@ package termchat.client;
 import termchat.model.User;
 import termchat.command.CommandContext;
 import termchat.command.CommandRegistry;
-import termchat.server.Server;
+import termchat.server.*;
+import termchat.service.AuthService;
 
 import java.io.*;
 import java.net.Socket;
 import java.util.HashSet;
 import java.util.Set;
 
-public class ClientHandler implements Runnable {
-    private final Server server;
+public class ClientHandler implements Runnable, OutputChannel {
     private final Socket socket;
     private User user;
+
+    private final SessionManager sessionManager;
+    private final FileTransfer fileTransfer;
+    private final AuthService authService;
+    private final ChatRoomFactory chatRoomFactory;
+    private final MessageRouter messageRouter;
 
     private DataInputStream in;
     private DataOutputStream out;
@@ -22,33 +28,44 @@ public class ClientHandler implements Runnable {
     private final CommandRegistry commandRegistry = new CommandRegistry();
     private final Set<String> notifiedOfflineRecipients = new HashSet<>();
 
-    public ClientHandler(Socket socket, Server server) {
+    public ClientHandler(Socket socket, SessionManager sessionManager, FileTransfer fileTransfer, AuthService authService, ChatRoomFactory chatRoomFactory, MessageRouter messageRouter) {
         this.socket = socket;
-        this.server = server;
+        this.sessionManager = sessionManager;
+        this.fileTransfer = fileTransfer;
+        this.authService = authService;
+        this.chatRoomFactory = chatRoomFactory;
+        this.messageRouter = messageRouter;
     }
 
+    @Override
     public User getUser() {
         return user;
     }
 
+    public DataInputStream getIn() {
+        return in;
+    }
+
+    public DataOutputStream getOut() {
+        return out;
+    }
+
+    @Override
     public void setUser(User user) {
         if (this.user != null) {
-            this.user.setClientHandler(null);  // delete the old reference as well, otherwise messages still go through
+            this.user.setClientHandler(null);
         }
         this.user = user;
         if (user != null) {
             user.setClientHandler(this);
         }
     }
-    private void setupStreams() {
-        try {
-            in = new DataInputStream(socket.getInputStream());
-            out = new DataOutputStream(socket.getOutputStream());
-        } catch (IOException e) {
-            System.out.println("ClientHandler stream setup error: " + e.getMessage());
-        }
+
+    public boolean shouldNotifyOffline(String username) {
+        return notifiedOfflineRecipients.add(username);
     }
 
+    @Override
     public void sendToClient(String message) {
         try {
             if (out != null) {
@@ -61,28 +78,7 @@ public class ClientHandler implements Runnable {
         }
     }
 
-    private void listenLoop() {
-        String messageIn;
-        try {
-            while (running) {
-                int type = in.readInt(); // 1 - message, 2 - file
-                if (type == 1) {
-                    messageIn = in.readUTF();
-                    handleMessage(messageIn);
-                } else if (type == 2) {
-                    server.FileHandler().receiveFile(user.getActiveChat(), user);
-                }
-            }
-        } catch (IOException e) {
-            System.out.println("ClientHandler loop incoming message readline error: " + e.getMessage());
-        }
-    }
-
-    private void handleMessage(String message) {
-        CommandContext ctx = new CommandContext(this, server);
-        commandRegistry.execute(message, ctx);
-    }
-
+    @Override
     public void stop() {
         running = false;
 
@@ -92,6 +88,43 @@ public class ClientHandler implements Runnable {
             }
         } catch (IOException e) {
             System.out.println("Error while stopping client: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public String readStringInput() throws IOException{
+        in.readInt();
+        return in.readUTF();
+    }
+
+    private void handleMessage(String message) {
+        CommandContext ctx = new CommandContext(this, authService, chatRoomFactory, messageRouter, fileTransfer);
+        commandRegistry.execute(message, ctx);
+    }
+
+    private void setupStreams() {
+        try {
+            in = new DataInputStream(socket.getInputStream());
+            out = new DataOutputStream(socket.getOutputStream());
+        } catch (IOException e) {
+            System.out.println("ClientHandler stream setup error: " + e.getMessage());
+        }
+    }
+
+    private void listenLoop() {
+        String messageIn;
+        try {
+            while (running) {
+                int type = in.readInt(); // 1 - message, 2 - file
+                if (type == 1) {
+                    messageIn = in.readUTF();
+                    handleMessage(messageIn);
+                } else if (type == 2) {
+                    fileTransfer.receiveFile(user.getActiveChat(), user);
+                }
+            }
+        } catch (IOException e) {
+            System.out.println("ClientHandler loop incoming message readline error: " + e.getMessage());
         }
     }
 
@@ -116,25 +149,13 @@ public class ClientHandler implements Runnable {
         System.out.println(Thread.currentThread().getName() + " started.");
         try {
             setupStreams();
-            server.addClientHandler(this);
+            sessionManager.addClient(this);
             listenLoop();
 
         } finally {
-            server.removeClientHandler(this);
+            sessionManager.removeClient(this);
             cleanup();
             System.out.println(Thread.currentThread().getName() + " finished.");
         }
-    }
-
-    public DataInputStream getIn() {
-        return in;
-    }
-
-    public DataOutputStream getOut() {
-        return out;
-    }
-
-    public boolean shouldNotifyOffline(String username) {
-        return notifiedOfflineRecipients.add(username);
     }
 }
