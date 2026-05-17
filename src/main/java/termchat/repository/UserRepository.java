@@ -20,6 +20,18 @@ public class UserRepository {
         loadUsersFromStorage();
     }
 
+    public boolean usernameExists(String username) {
+        return findByUsername(username).isPresent();
+    }
+
+    public Optional<User> findByUsername(String username) {
+        return users.stream().filter(u -> u.getUsername().equalsIgnoreCase(username)).findFirst();
+    }
+
+    public void saveUser(User user) {
+        users.add(user);
+        saveUsersToStorage();
+    }
 
     private void loadUsersFromStorage() {
         Type userListType = new TypeToken<List<StoredUser>>() {}.getType();
@@ -32,11 +44,6 @@ public class UserRepository {
         }
     }
 
-    public void saveUser(User user) {
-        users.add(user);
-        saveUsersToStorage();
-    }
-
     private void saveUsersToStorage() {
         List<StoredUser> storedUsers = users.stream().map(user -> new StoredUser(
                 user.getUserId(),
@@ -45,14 +52,5 @@ public class UserRepository {
                 user.getEmail()
         )).toList();
         storageService.save(USERS_FILE, storedUsers);
-    }
-
-    // Optional class - solution for representing optional values instead of null references. <https://www.baeldung.com/java-optional>
-    public Optional<User> findByUsername(String username) {
-        return users.stream().filter(u -> u.getUsername().equalsIgnoreCase(username)).findFirst();
-    }
-
-    public boolean usernameExists(String username) {
-        return findByUsername(username).isPresent();
     }
 }

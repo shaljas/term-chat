@@ -9,10 +9,6 @@ public class StoredChatRoom {
     private String ownerUsername;
     private List<String> memberUsernames;
 
-    public StoredChatRoom() {
-        this.memberUsernames = new ArrayList<>();
-    }
-
     public StoredChatRoom(String id, String name, String ownerUsername, List<String> memberUsernames) {
         this.id = id;
         this.name = name;
