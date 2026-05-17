@@ -18,7 +18,7 @@ public class HelpCommand implements CommandHandler {
         );
 
         ctx.send(WHITE + "ACCOUNT\n" + RESET +
-            String.format("  %-35s %s%n", "/register <username> <password>", "- creates a new account") +
+            String.format("  %-35s %s%n", "/register <username> <password> <email>", "- creates a new account") +
             String.format("  %-35s %s%n", "/login <username> <password>", "- log in to an account") +
             String.format("  %-35s %s", "/logout", "- logs the user out")
         );
