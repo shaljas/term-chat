@@ -42,12 +42,12 @@ II stage: 26. Aprill
 - chat room creation and usage (shuffonix)
 
 III stage: 17. May 2026
-- chat history
-- send files
-- search by content
-- email notification to offline users
-- clean and refactored code
-- updated diagram and ReadME
+- chat history (hugoSaks)
+- send files (shuffonix)
+- search by content (hugoSaks)
+- email notification to offline users (rbr4t)
+- clean and refactored code (hugoSaks + shaljas)
+- updated diagram and ReadME (shaljas)
 
 Project demo: 21 May 2026
 
